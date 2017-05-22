@@ -57,7 +57,7 @@ public class TerrainGenerator : MonoBehaviour
 					float height = Mathf.Sqrt(px * px + py * py)-0.3f;
 					px = px * (float)mapWidth / 1000;
 					py = py * (float)mapWidth / 1000;
-					height = height*height * 0.6f + 0.25f;
+					height = height*height * 0.6f + 0.3f;
 					for (int h = 0; h < detailLayers.Length; h++)
 					{
 						float detail = Mathf.PerlinNoise(
@@ -75,7 +75,7 @@ public class TerrainGenerator : MonoBehaviour
 			}
 			float meanHeight = sumHeight / (size * size);
 			waterHeight = meanHeight / 1.8f * mapHeight;
-			float sandHeight = meanHeight / 1.6f;
+			float sandHeight = meanHeight / 1.7f;
 			float mountainHeight = meanHeight * 2f;
 			for (int i = 0; i < textureSize; i++)
 			{
@@ -85,6 +85,7 @@ public class TerrainGenerator : MonoBehaviour
 					int y = (int)((float)j / (float)textureSize * size);
 					textures[i, j, 3] = Mathf.Clamp01(1 - Mathf.Abs((heights[x, y] - sandHeight) * 10));
 					textures[i, j, 2] = Mathf.Clamp01(Mathf.Pow((heights[x, y] - mountainHeight) * 8, 3));
+					textures[i, j, 4] = 0;
 					textures[i, j, 0] = 1 - textures[i, j, 3] - textures[i, j, 2];
 				}
 			}
@@ -108,12 +109,12 @@ public class TerrainGenerator : MonoBehaviour
 		tempTextures = null;
 		thread = null;
 		Debug.Log("Generated Terrain");
+		yield return null;
 		RoadGenerator rgen = GetComponent<RoadGenerator>();
 		if (rgen != null)
-			rgen.Generate();
+			rgen.Generate(waterHeight/terrain.terrainData.heightmapScale.z);
 		else
 		{
-			yield return null;
 			reflection.RenderProbe();
 		}
 	}

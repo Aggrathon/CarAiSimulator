@@ -215,7 +215,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 780611a67e8e941a2b3aa96e5915a793, type: 2}
       propertyPath: m_LocalPosition.y
-      value: 60.889366
+      value: 49.03562
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 780611a67e8e941a2b3aa96e5915a793, type: 2}
       propertyPath: m_LocalPosition.z
@@ -537,6 +537,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   reflection: {fileID: 505524547}
+  heightPenalty: 120
+  numCheckpoints: 15
+  roadWidth: 10
 --- !u!1001 &2106697271
 Prefab:
   m_ObjectHideFlags: 0
