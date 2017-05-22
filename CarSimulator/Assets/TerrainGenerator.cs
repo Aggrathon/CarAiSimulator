@@ -11,6 +11,7 @@ public class TerrainGenerator : MonoBehaviour
 	public bool generateOnStart = false;
 	public DetailLayer[] detailLayers;
 	public Transform water;
+	public ReflectionProbe reflection;
 
 	Terrain terrain;
 	Thread thread;
@@ -84,6 +85,8 @@ public class TerrainGenerator : MonoBehaviour
 		water.position = new Vector3(water.position.x, waterHeight, water.position.z);
 		tempHeights = null;
 		thread = null;
+		yield return null;
+		reflection.RenderProbe();
 	}
 
 	private void OnDestroy()
