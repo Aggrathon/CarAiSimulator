@@ -16,6 +16,7 @@ public class TerrainGenerator : MonoBehaviour
 	Terrain terrain;
 	Thread thread;
 	float[,] tempHeights;
+	float[,,] tempTextures;
 	float waterHeight;
 
 	private void Awake()
@@ -33,10 +34,13 @@ public class TerrainGenerator : MonoBehaviour
 	public void Generate()
 	{
 		tempHeights = null;
+		tempTextures = null;
 		int size = terrain.terrainData.heightmapResolution;
 		float[,] heights = terrain.terrainData.GetHeights(0, 0, size, size);
 		float mapHeight = terrain.terrainData.heightmapScale.y;
 		float mapWidth = terrain.terrainData.heightmapWidth;
+		int textureSize = terrain.terrainData.alphamapWidth;
+		float[,,] textures = terrain.terrainData.GetAlphamaps(0, 0, textureSize, textureSize);
 		for (int h = 0; h < detailLayers.Length; h++)
 		{
 			detailLayers[h].x = Random.Range(-1000f, 1000f);
@@ -53,7 +57,7 @@ public class TerrainGenerator : MonoBehaviour
 					float height = Mathf.Sqrt(px * px + py * py)-0.3f;
 					px = px * (float)mapWidth / 1000;
 					py = py * (float)mapWidth / 1000;
-					height = height*height * 0.6f + 0.4f;
+					height = height*height * 0.6f + 0.25f;
 					for (int h = 0; h < detailLayers.Length; h++)
 					{
 						float detail = Mathf.PerlinNoise(
@@ -69,24 +73,49 @@ public class TerrainGenerator : MonoBehaviour
 					sumHeight += height;
 				}
 			}
-			waterHeight = sumHeight / (1.8f * size * size) * mapHeight;
+			float meanHeight = sumHeight / (size * size);
+			waterHeight = meanHeight / 1.8f * mapHeight;
+			float sandHeight = meanHeight / 1.6f;
+			float mountainHeight = meanHeight * 2f;
+			for (int i = 0; i < textureSize; i++)
+			{
+				for (int j = 0; j < textureSize; j++)
+				{
+					int x = (int)((float)i / (float)textureSize * size);
+					int y = (int)((float)j / (float)textureSize * size);
+					textures[i, j, 3] = Mathf.Clamp01(1 - Mathf.Abs((heights[x, y] - sandHeight) * 10));
+					textures[i, j, 2] = Mathf.Clamp01(Mathf.Pow((heights[x, y] - mountainHeight) * 8, 3));
+					textures[i, j, 0] = 1 - textures[i, j, 3] - textures[i, j, 2];
+				}
+			}
+			tempTextures = textures;
 			tempHeights = heights;
 		});
 		thread.Start();
 		StartCoroutine(WaitForResult());
+		Debug.Log("Generating Terrain");
 	}
 
 	IEnumerator WaitForResult()
 	{
-		while (tempHeights == null)
+		while (tempHeights == null || tempTextures == null)
 			yield return null;
 		terrain.terrainData.SetHeights(0, 0, tempHeights);
+		terrain.terrainData.SetAlphamaps(0, 0, tempTextures);
 		terrain.Flush();
 		water.position = new Vector3(water.position.x, waterHeight, water.position.z);
 		tempHeights = null;
+		tempTextures = null;
 		thread = null;
-		yield return null;
-		reflection.RenderProbe();
+		Debug.Log("Generated Terrain");
+		RoadGenerator rgen = GetComponent<RoadGenerator>();
+		if (rgen != null)
+			rgen.Generate();
+		else
+		{
+			yield return null;
+			reflection.RenderProbe();
+		}
 	}
 
 	private void OnDestroy()
