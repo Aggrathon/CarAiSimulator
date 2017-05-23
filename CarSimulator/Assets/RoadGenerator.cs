@@ -11,12 +11,13 @@ public class RoadGenerator : MonoBehaviour {
 	public int heightPenalty = 30;
 	public int numCheckpoints = 8;
 	public int roadWidth = 10;
+	public int pathFindingSpacing = 10;
 
 	Terrain terrain;
 	float[,] tempHeights;
 	float[,,] tempTextures;
 	Thread thread;
-	List<PathFindNode> path;
+	List<Vector3> road;
 	string status;
 
 	private void Awake()
@@ -28,20 +29,22 @@ public class RoadGenerator : MonoBehaviour {
 	[ContextMenu("Generate")]
 	public void Generate()
 	{
-		Generate(0.15f);
-	}
-	public void Generate(float waterHeight) {
+		if (thread != null)
+			thread.Abort();
 		tempHeights = null;
 		tempTextures = null;
 		status = null;
-		path = new List<PathFindNode>();
 		int heightWidth = terrain.terrainData.heightmapWidth;
+		float heightScaleX = terrain.terrainData.heightmapScale.x;
+		float heightScaleY = terrain.terrainData.heightmapScale.y;
 		float[,] heights = terrain.terrainData.GetHeights(0, 0, heightWidth, heightWidth);
 		int textureWidth = terrain.terrainData.alphamapWidth;
 		float[,,] textures = terrain.terrainData.GetAlphamaps(0, 0, textureWidth, textureWidth);
+		Vector3 offset = transform.position;
 
 		thread = new Thread(() => {
 			//Create path
+			List<PathFindNode> path = new List<PathFindNode>();
 			System.Random rnd = new System.Random();
 			int[] order;
 			bool random = true;
@@ -60,7 +63,11 @@ public class RoadGenerator : MonoBehaviour {
 			{
 				order = new int[] { 0, 1, 2, 5, 8, 7, 6, 3 };
 			}
-			int pathFindingGraphSize = heightWidth / 10;
+			float waterHeight = 0;
+			foreach (float h in heights)
+				waterHeight += h ;
+			waterHeight /= heights.Length * 1.85f;
+			int pathFindingGraphSize = heightWidth / pathFindingSpacing;
 			PathFindNode[,] nodes = new PathFindNode[pathFindingGraphSize, pathFindingGraphSize];
 			for (int i = 0; i < pathFindingGraphSize; i++)
 			{
@@ -98,7 +105,7 @@ public class RoadGenerator : MonoBehaviour {
 				}
 				x1 = x2;
 				y1 = y2;
-				path.AddRange(p);
+				AddRoadSegment(path, p);
 				number++;
 			}
 			//Create roads
@@ -121,6 +128,9 @@ public class RoadGenerator : MonoBehaviour {
 				}
 			}
 			SmoothRoads(path, heights, (int)(roadWidth * (float)heightWidth / (float)textureWidth - 1) + 3, (float)heightWidth / pathFindingGraphSize);
+			road = new List<Vector3>();
+			foreach (var n in path)
+				road.Add(n.GetPosition(pathFindingSpacing * heightScaleX, heightScaleY, offset));
 			tempHeights = heights;
 			tempTextures = textures;
 		});
@@ -162,10 +172,10 @@ public class RoadGenerator : MonoBehaviour {
 	private void SmoothRoads(List<PathFindNode> roads, float[,] heights, int roadWidth, float graphScale)
 	{
 		List<float> pathHeights = new List<float>();
-		for (int i = 0; i < path.Count; i++)
+		for (int i = 0; i < roads.Count; i++)
 		{
-			int hx = (int)((float)path[i].x * graphScale);
-			int hy = (int)((float)path[i].y * graphScale);
+			int hx = (int)((float)roads[i].x * graphScale);
+			int hy = (int)((float)roads[i].y * graphScale);
 			float sum = 0;
 			int num = 0;
 			for (int x = -roadWidth + 1; x < roadWidth; x++)
@@ -178,11 +188,11 @@ public class RoadGenerator : MonoBehaviour {
 			}
 			pathHeights.Add(Mathf.Max(sum / num, heights[hx, hy]));
 		}
-		SmoothRoadsPass(path, graphScale, roadWidth, heights, pathHeights, 1f);
-		SmoothRoadsPass(path, graphScale, roadWidth, heights, pathHeights, 0.5f);
-		SmoothRoadsPass(path, graphScale, roadWidth, heights, pathHeights, 0.3f);
-		SmoothRoadsPass(path, graphScale, roadWidth, heights, pathHeights, 0.2f);
-		SmoothRoadsPass(path, graphScale, roadWidth, heights, pathHeights, 0.1f);
+		SmoothRoadsPass(roads, graphScale, roadWidth, heights, pathHeights, 1f);
+		SmoothRoadsPass(roads, graphScale, roadWidth, heights, pathHeights, 0.5f);
+		SmoothRoadsPass(roads, graphScale, roadWidth, heights, pathHeights, 0.3f);
+		SmoothRoadsPass(roads, graphScale, roadWidth, heights, pathHeights, 0.2f);
+		SmoothRoadsPass(roads, graphScale, roadWidth, heights, pathHeights, 0.1f);
 	}
 
 	private void SmoothRoadsPass(List<PathFindNode> path, float graphScale, int roadWidth, float[,] heights, List<float>pathHeights, float strength)
@@ -210,6 +220,57 @@ public class RoadGenerator : MonoBehaviour {
 			}
 		}
 	}
+
+	private void AddRoadSegment(List<PathFindNode> roads, LinkedList<PathFindNode> segment)
+	{
+		while(roads.Count < 2)
+		{
+			roads.Add(segment.First.Value);
+			segment.RemoveFirst();
+		}
+		foreach (var node in segment)
+		{
+			bool cont = true;
+			for (int i = 0; i < roads.Count; i++)
+			{
+				if (node.SqrDistance(roads[i]) < 5)
+				{
+					cont = false;
+					roads.Add(roads[i]);
+					break;
+				}
+			}
+			if(cont)
+			{
+				Vector2 old = (Vector2)roads[roads.Count - 1] - (Vector2)roads[roads.Count - 2];
+				Vector2 test = (Vector2)node - (Vector2)roads[roads.Count - 2];
+				if (test.sqrMagnitude < 80 && Vector2.Angle(old, test) < 25f)
+				{
+					roads[roads.Count - 1] = node;
+				}
+				else
+				{
+					roads.Add(node);
+				}
+			}
+		}
+	}
+
+	void OnDrawGizmosSelected()
+	{
+		if(road != null && road.Count > 0)
+		{
+			Gizmos.color = Color.black;
+			Vector3 pos = road[road.Count - 1] + Vector3.up;
+			for (int i = 0; i < road.Count; i++)
+			{
+				Gizmos.DrawSphere(road[i], 10);
+				Gizmos.DrawLine(pos, road[i]+Vector3.up);
+				pos = road[i] + Vector3.up;
+			}
+		}
+	}
+
 
 	private LinkedList<PathFindNode> PathFind(int x1, int y1, int x2, int y2, PathFindNode[,] nodes)
 	{
@@ -325,6 +386,26 @@ public class RoadGenerator : MonoBehaviour {
 			float dx = x - other.x;
 			float dy = y - other.y;
 			return Mathf.Sqrt(dx * dx + dy * dy);
+		}
+
+		public int SqrDistance(PathFindNode other)
+		{
+			int dx = x - other.x;
+			int dy = y - other.y;
+			return dx * dx + dy * dy;
+		}
+
+		public static explicit operator Vector2(PathFindNode node)
+		{
+			return new Vector2(node.x, node.y);
+		}
+
+		public Vector3 GetPosition(float horizontalScale, float verticalScale, Vector3 offset)
+		{
+			return new Vector3(
+				y * horizontalScale, 
+				height * verticalScale, 
+				x * horizontalScale) + offset;
 		}
 	}
 }
