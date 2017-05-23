@@ -109,23 +109,29 @@ public class RoadGenerator : MonoBehaviour {
 				number++;
 			}
 			//Create roads
+			PathFindNode prev = path[path.Count - 1];
+			float textureScaling = (float)textureWidth / (float)pathFindingGraphSize;
+			int len = textures.GetLength(2) - 1;
 			for (int i = 0; i < path.Count; i++)
 			{
 				PathFindNode node = path[i];
-				int tx = (int)((float)node.x / (float)pathFindingGraphSize * textureWidth);
-				int ty = (int)((float)node.y / (float)pathFindingGraphSize * textureWidth);
-				int len = textures.GetLength(2) - 1;
-				for (int x = -roadWidth + 1; x < roadWidth; x++)
-				{
-					for (int y = -roadWidth + 1; y < roadWidth; y++)
+				int tx = (int)((float)node.x *textureScaling);
+				int ty = (int)((float)node.y *textureScaling);
+				Utils.DrawCircle(tx, ty, roadWidth, (x, y) => {
+					for (int j = 0; j < len; j++)
 					{
-						for (int j = 0; j < len; j++)
-						{
-							textures[tx + x, ty + y, j] = 0f;
-						}
-						textures[tx + x, ty + y, len] = 1f;
+						textures[x, y, j] = 0f;
 					}
-				}
+					textures[x, y, len] = 1f;
+				});
+				Utils.LineDraw(tx, ty, (int)((float)prev.x*textureScaling) , (int)((float)prev.y * textureScaling), (x, y) => {
+					for (int j = 0; j < len; j++)
+					{
+						textures[x, y, j] = 0f;
+					}
+					textures[x, y, len] = 1f;
+				});
+				prev = node;
 			}
 			SmoothRoads(path, heights, (int)(roadWidth * (float)heightWidth / (float)textureWidth - 1) + 3, (float)heightWidth / pathFindingGraphSize);
 			road = new List<Vector3>();
