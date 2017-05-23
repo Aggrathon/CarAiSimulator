@@ -215,7 +215,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 780611a67e8e941a2b3aa96e5915a793, type: 2}
       propertyPath: m_LocalPosition.y
-      value: 77.08449
+      value: 151.22923
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 780611a67e8e941a2b3aa96e5915a793, type: 2}
       propertyPath: m_LocalPosition.z
@@ -479,7 +479,7 @@ Terrain:
     rgba: 4286545791
   m_LegacyShininess: 0.078125
   m_MaterialTemplate: {fileID: 0}
-  m_BakeLightProbesForTrees: 1
+  m_BakeLightProbesForTrees: 0
   m_ScaleInLightmap: 0.0256
   m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &2065320136
@@ -489,7 +489,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 2065320133}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1000, y: 0, z: -1000}
+  m_LocalPosition: {x: -2000, y: 0, z: -2000}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1095773835}
@@ -506,18 +506,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: afd3e9cbea9911f49aaa34839b64b664, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  generateOnStart: 1
+  generateOnStart: 0
   detailLayers:
-  - scale: 1
+  - scale: 0.5
     height: 0.25
     detail: 1
-  - scale: 2
+  - scale: 1
     height: 0.2
     detail: 1
-  - scale: 6
+  - scale: 3
     height: 0.04
     detail: 0
-  - scale: 40
+  - scale: 20
     height: 0.01
     detail: 1
   - scale: 0.2
@@ -537,10 +537,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   reflection: {fileID: 505524547}
-  heightPenalty: 120
-  numCheckpoints: 15
-  roadWidth: 10
-  pathFindingSpacing: 10
+  heightPenalty: 180
+  numCheckpoints: 18
+  roadWidth: 6
+  pathFindingSpacing: 30
 --- !u!1001 &2106697271
 Prefab:
   m_ObjectHideFlags: 0
@@ -592,11 +592,6 @@ Prefab:
       value: 
       objectReference: {fileID: 13400000, guid: 67db31eead11e8d6d00011d98d76c639,
         type: 2}
-    - target: {fileID: 114019788089198466, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
-        type: 2}
-      propertyPath: m_SlipLimit
-      value: 0.8
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0, type: 2}
   m_IsPrefabParent: 0

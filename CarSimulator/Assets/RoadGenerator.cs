@@ -66,7 +66,7 @@ public class RoadGenerator : MonoBehaviour {
 			float waterHeight = 0;
 			foreach (float h in heights)
 				waterHeight += h ;
-			waterHeight /= heights.Length * 1.85f;
+			waterHeight /= heights.Length * 1.78f;
 			int pathFindingGraphSize = heightWidth / pathFindingSpacing;
 			PathFindNode[,] nodes = new PathFindNode[pathFindingGraphSize, pathFindingGraphSize];
 			for (int i = 0; i < pathFindingGraphSize; i++)
@@ -117,14 +117,14 @@ public class RoadGenerator : MonoBehaviour {
 				PathFindNode node = path[i];
 				int tx = (int)((float)node.x *textureScaling);
 				int ty = (int)((float)node.y *textureScaling);
-				Utils.DrawCircle(tx, ty, roadWidth, (x, y) => {
+				Drawing.DrawCircle(tx, ty, roadWidth, (x, y) => {
 					for (int j = 0; j < len; j++)
 					{
 						textures[x, y, j] = 0f;
 					}
 					textures[x, y, len] = 1f;
 				});
-				Utils.LineDraw(tx, ty, (int)((float)prev.x*textureScaling) , (int)((float)prev.y * textureScaling), (x, y) => {
+				Drawing.DrawFatLine(tx, ty, (int)((float)prev.x*textureScaling) , (int)((float)prev.y * textureScaling), roadWidth, (x, y, p) => {
 					for (int j = 0; j < len; j++)
 					{
 						textures[x, y, j] = 0f;
@@ -133,17 +133,18 @@ public class RoadGenerator : MonoBehaviour {
 				});
 				prev = node;
 			}
-			SmoothRoads(path, heights, (int)(roadWidth * (float)heightWidth / (float)textureWidth - 1) + 3, (float)heightWidth / pathFindingGraphSize);
+			SmoothRoads(path, heights, (int)(roadWidth * (float)heightWidth / (float)textureWidth - 1) + 2, (float)heightWidth / pathFindingGraphSize);
+			tempHeights = heights;
+			tempTextures = textures;
 			road = new List<Vector3>();
 			foreach (var n in path)
 				road.Add(n.GetPosition(pathFindingSpacing * heightScaleX, heightScaleY, offset));
-			tempHeights = heights;
-			tempTextures = textures;
 		});
 		thread.Start();
 		StartCoroutine(WaitForResult());
 		Debug.Log("Generating Road");
 	}
+
 
 	IEnumerator WaitForResult()
 	{
@@ -175,55 +176,76 @@ public class RoadGenerator : MonoBehaviour {
 	}
 
 
-	private void SmoothRoads(List<PathFindNode> roads, float[,] heights, int roadWidth, float graphScale)
+	private void SmoothRoads(List<PathFindNode> path, float[,] heights, int roadWidth, float graphScale)
 	{
-		List<float> pathHeights = new List<float>();
-		for (int i = 0; i < roads.Count; i++)
+		PathFindNode prev = path[path.Count - 1];
+		int px = (int)((float)prev.x * graphScale);
+		int py = (int)((float)prev.y * graphScale);
+		for (int i = 0; i < path.Count; i++)
 		{
-			int hx = (int)((float)roads[i].x * graphScale);
-			int hy = (int)((float)roads[i].y * graphScale);
-			float sum = 0;
-			int num = 0;
-			for (int x = -roadWidth + 1; x < roadWidth; x++)
-			{
-				for (int y = -roadWidth + 1; y < roadWidth; y++)
-				{
-					sum += heights[hx + x, hy + y];
-					num++;
-				}
-			}
-			pathHeights.Add(Mathf.Max(sum / num, heights[hx, hy]));
+			PathFindNode node = path[i];
+			int hx = (int)((float)node.x * graphScale);
+			int hy = (int)((float)node.y * graphScale);
+			Drawing.DrawFatLine(hx, hy, px, py, roadWidth, (x, y, p) => {
+				heights[x, y] = prev.height * p + node.height * (1 - p);
+			});
+			Drawing.DrawSideLines(hx, hy, px, py, roadWidth + 2, (x, y, p) => {
+				heights[x, y] = (
+					heights[x - 1, y + 1] + heights[x + 1, y + 1] + heights[x + 1, y + 1] +
+					heights[x - 1, y] + heights[x, y] + heights[x + 1, y] +
+					heights[x - 1, y - 1] + heights[x, y - 1] + heights[x + 1, y - 1]
+					) / 9;
+			});
+			Drawing.DrawSideLines(hx, hy, px, py, roadWidth + 3, (x, y, p) => {
+				heights[x, y] = (
+					heights[x - 1, y + 1] + heights[x + 1, y + 1] + heights[x + 1, y + 1] +
+					heights[x - 1, y] + heights[x, y] + heights[x + 1, y] +
+					heights[x - 1, y - 1] + heights[x, y - 1] + heights[x + 1, y - 1]
+					) / 9;
+			});
+			prev = node;
+			px = hx;
+			py = hy;
 		}
-		SmoothRoadsPass(roads, graphScale, roadWidth, heights, pathHeights, 1f);
-		SmoothRoadsPass(roads, graphScale, roadWidth, heights, pathHeights, 0.5f);
-		SmoothRoadsPass(roads, graphScale, roadWidth, heights, pathHeights, 0.3f);
-		SmoothRoadsPass(roads, graphScale, roadWidth, heights, pathHeights, 0.2f);
-		SmoothRoadsPass(roads, graphScale, roadWidth, heights, pathHeights, 0.1f);
-	}
-
-	private void SmoothRoadsPass(List<PathFindNode> path, float graphScale, int roadWidth, float[,] heights, List<float>pathHeights, float strength)
-	{
 		for (int i = 0; i < path.Count; i++)
 		{
 			int hx = (int)((float)path[i].x * graphScale);
 			int hy = (int)((float)path[i].y * graphScale);
-			for (int x = -roadWidth + 1; x < roadWidth; x++)
-			{
-				for (int y = -roadWidth + 1; y < roadWidth; y++)
-				{
-					heights[hx + x, hy + y] = heights[hx + x, hy + y] * (1f - strength) + pathHeights[i] * strength;
-					heights[hx + x, hy + y] = (
-						heights[hx + x + 1, hy + y + 1] +
-						heights[hx + x + 1, hy + y] * 3 +
-						heights[hx + x + 1, hy + y - 1] +
-						heights[hx + x, hy + y + 1] * 3 +
-						heights[hx + x, hy + y] * 14 +
-						heights[hx + x, hy + y - 1] * 3 +
-						heights[hx + x - 1, hy + y + 1] +
-						heights[hx + x - 1, hy + y] * 3 +
-						heights[hx + x - 1, hy + y - 1]) / 30;
-				}
-			}
+			Drawing.DrawCircle(hx, hy, roadWidth, (x, y) => {
+				heights[x, y] = path[i].height;
+			});
+		}
+		prev = path[0];
+		px = (int)((float)prev.x * graphScale);
+		py = (int)((float)prev.y * graphScale);
+		for (int i = path.Count-1; i >= 0; i--)
+		{
+			PathFindNode node = path[i];
+			int hx = (int)((float)node.x * graphScale);
+			int hy = (int)((float)node.y * graphScale);
+			Drawing.DrawFatLine(hx, hy, px, py, roadWidth, (x, y, p) => {
+				p = (p < 0.5f ? 2 * p * p : -1 + (4 - 2 * p) * p) * 0.5f + p * 0.5f;
+				heights[x, y] = heights[x, y] * 0.6f + (prev.height * p + node.height * (1 - p)) * 0.4f;
+			});
+			prev = node;
+			px = hx;
+			py = hy;
+		}
+		prev = path[path.Count - 1];
+		px = (int)((float)prev.x * graphScale);
+		py = (int)((float)prev.y * graphScale);
+		for (int i = 0; i < path.Count; i++)
+		{
+			PathFindNode node = path[i];
+			int hx = (int)((float)node.x * graphScale);
+			int hy = (int)((float)node.y * graphScale);
+			Drawing.DrawFatLine(hx, hy, px, py, roadWidth, (x, y, p) => {
+				p = (p < 0.5f ? 2 * p * p : -1 + (4 - 2 * p) * p)*0.7f + p*0.3f;
+				heights[x, y] = heights[x, y] * 0.6f + (prev.height * p + node.height * (1 - p)) * 0.4f;
+			});
+			prev = node;
+			px = hx;
+			py = hy;
 		}
 	}
 
@@ -239,7 +261,7 @@ public class RoadGenerator : MonoBehaviour {
 			bool cont = true;
 			for (int i = 0; i < roads.Count; i++)
 			{
-				if (node.SqrDistance(roads[i]) < 5)
+				if (node.SqrDistance(roads[i]) < 10)
 				{
 					cont = false;
 					roads.Add(roads[i]);
@@ -262,9 +284,9 @@ public class RoadGenerator : MonoBehaviour {
 		}
 	}
 
-	void OnDrawGizmosSelected()
+	/*void OnDrawGizmosSelected()
 	{
-		if(road != null && road.Count > 0)
+		if(tempHeights == null && road != null && road.Count > 0)
 		{
 			Gizmos.color = Color.black;
 			Vector3 pos = road[road.Count - 1] + Vector3.up;
@@ -275,7 +297,7 @@ public class RoadGenerator : MonoBehaviour {
 				pos = road[i] + Vector3.up;
 			}
 		}
-	}
+	}*/
 
 
 	private LinkedList<PathFindNode> PathFind(int x1, int y1, int x2, int y2, PathFindNode[,] nodes)
@@ -330,6 +352,8 @@ public class RoadGenerator : MonoBehaviour {
 				PathFindTryPath(current, nodes[current.x - jumpDistance, current.y + jumpDistance], target, queue);
 			if (dy <= 0 && dx <= 0)
 				PathFindTryPath(current, nodes[current.x - jumpDistance, current.y - jumpDistance], target, queue);
+			if (queue.Count > 800)
+				return null;
 		}
 		return null;
 	}
