@@ -10,4 +10,9 @@ public static class Utils {
 		a = b;
 		b = tmp;
 	}
+
+	public static float GetWideLineProgress(int length2, int ax, int ay, int bx, int by)
+	{
+		return ((float)(ax * ax + ay*ay - bx * bx - by*by) / (float)length2 + 1f) / 2f;
+	}
 }

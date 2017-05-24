@@ -28,6 +28,8 @@ public class TerrainGenerator : MonoBehaviour
 	{
 		if (generateOnStart)
 			Generate();
+		else
+			reflection.RenderProbe();
 	}
 
 	[ContextMenu("Generate")]
@@ -85,7 +87,7 @@ public class TerrainGenerator : MonoBehaviour
 				{
 					int x = (int)((float)i / (float)textureSize * size);
 					int y = (int)((float)j / (float)textureSize * size);
-					textures[i, j, 3] = Mathf.Clamp01(1 - Mathf.Abs((heights[x, y] - sandHeight) * 12));
+					textures[i, j, 3] = Mathf.Clamp01(1 - Mathf.Abs((heights[x, y] - sandHeight) * 16));
 					textures[i, j, 2] = Mathf.Clamp01(Mathf.Pow((heights[x, y] - mountainHeight) * 8, 3));
 					textures[i, j, 4] = 0;
 					textures[i, j, 1] = 0;

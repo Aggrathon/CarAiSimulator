@@ -79,22 +79,22 @@ public static class Drawing
 		Vector2 perp = new Vector2(x2 - x1, y2 - y1).normalized * width;
 		int dx = -(int)Mathf.Round(perp.y);
 		int dy = (int)Mathf.Round(perp.x);
-		float z2 = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)+width/4;
+		int z2 = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)+width/4;
 		if (Mathf.Abs(Mathf.Abs(dx)-Mathf.Abs(dy)) < width)
 		{
 			DrawLine(x1, y1, x2, y2, (x, y, p) => {
 				DrawLine(x+dx, y+dy, x-dx, y-dy, (rx, ry, rp) => {
+					int ax = rx - x1, ay = ry - y1;
+					int bx = x2 - rx, by = y2 - ry;
+					onPoint(rx + 1, ry + 1, Utils.GetWideLineProgress(z2, ax + 1, ay + 1, bx + 1, by - 1));
+					onPoint(rx + 1, ry, Utils.GetWideLineProgress(z2, ax + 1, ay, bx + 1, by));
+					onPoint(rx + 1, ry - 1, Utils.GetWideLineProgress(z2, ax + 1, ay - 1, bx + 1, by + 1));
+					onPoint(rx, ry + 1, Utils.GetWideLineProgress(z2, ax, ay + 1, bx, by - 1));
 					onPoint(rx, ry, p);
-					float a2 = (rx + 1-x1) * (rx + 1 -x1) + (ry-y1)*(ry-y1);
-					float b2 = (rx + 1 - x2) * (rx + 1 - x2) + (ry - y2) * (ry - y2);
-					onPoint(rx+1, ry, ((a2 - b2) / z2 + 1) / 2);
-					a2 = (rx - 1 - x1) * (rx - 1 - x1) + (ry - y1) * (ry - y1);
-					onPoint(rx-1, ry, ((a2 - b2) / z2 + 1) / 2);
-					a2 = (rx - x1) * (rx - x1) + (ry - y1) * (ry - y1);
-					b2 = (rx - x2) * (rx - x2) + (ry +1- y2) * (ry +1- y2);
-					onPoint(rx, ry+1, ((a2 - b2) / z2 + 1) / 2);
-					b2 = (rx - x2) * (rx - x2) + (ry - 1 - y2) * (ry - 1 - y2);
-					onPoint(rx, ry-1, ((a2 - b2) / z2 + 1) / 2);
+					onPoint(rx, ry - 1, Utils.GetWideLineProgress(z2, ax, ay - 1, bx, by + 1));
+					onPoint(rx - 1, ry + 1, Utils.GetWideLineProgress(z2, ax - 1, ay + 1, bx - 1, by - 1));
+					onPoint(rx - 1, ry, Utils.GetWideLineProgress(z2, ax - 1, ay, bx - 1, by));
+					onPoint(rx - 1, ry - 1, Utils.GetWideLineProgress(z2, ax - 1, ay - 1, bx - 1, by + 1));
 				});
 			});
 		}
