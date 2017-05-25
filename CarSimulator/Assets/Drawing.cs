@@ -74,11 +74,20 @@ public static class Drawing
 		}
 	}
 
-	public static void DrawFatLine(int x1, int y1, int x2, int y2, int width, Action<int, int, float> onPoint)
+	public static void DrawFatLine(int x1, int y1, int x2, int y2, int width, Action<int, int, float> onPoint, bool shortEnd=false)
 	{
-		Vector2 perp = new Vector2(x2 - x1, y2 - y1).normalized * width;
-		int dx = -(int)Mathf.Round(perp.y);
-		int dy = (int)Mathf.Round(perp.x);
+		Vector2 along = new Vector2(x2 - x1, y2 - y1).normalized;
+		if (shortEnd)
+		{
+			Vector2 end = along * (width *3 / 4);
+			x1 += (int)Mathf.Round(end.x);
+			x2 -= (int)Mathf.Round(end.x);
+			y1 += (int)Mathf.Round(end.y);
+			y2 -= (int)Mathf.Round(end.y);
+		}
+		along *= width;
+		int dx = -(int)Mathf.Round(along.y);
+		int dy = (int)Mathf.Round(along.x);
 		int z2 = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)+width/4;
 		if (Mathf.Abs(Mathf.Abs(dx)-Mathf.Abs(dy)) < width)
 		{
@@ -209,9 +218,16 @@ public static class Drawing
 		}
 	}
 
-	public static void DrawSideLines(int x1, int y1, int x2, int y2, int width, Action<int, int, float> onPoint)
+	public static void DrawSideLines(int x1, int y1, int x2, int y2, int width, Action<int, int, float> onPoint, bool shortEnd=true)
 	{
 		Vector2 perp = new Vector2(x2 - x1, y2 - y1).normalized * width;
+		if (shortEnd)
+		{
+			x1 += (int)Mathf.Round(perp.x);
+			x2 -= (int)Mathf.Round(perp.x);
+			y1 += (int)Mathf.Round(perp.y);
+			y2 -= (int)Mathf.Round(perp.y);
+		}
 		int dx = -(int)Mathf.Round(perp.y);
 		int dy = (int)Mathf.Round(perp.x);
 		DrawLine(x1 + dx, y1 + dy, x2 + dx, y2 + dy, (x, y, p) => {
