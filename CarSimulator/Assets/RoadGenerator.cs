@@ -48,26 +48,9 @@ public class RoadGenerator : MonoBehaviour {
 		Vector3 offset = transform.position;
 
 		thread = new Thread(() => {
-			//Create path
-			List<PathFindNode> path = new List<PathFindNode>();
 			System.Random rnd = new System.Random();
-			int[] order;
-			bool random = true;
-			if (random)
-			{
-				order = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
-				for (int i = 0; i < order.Length-1; i++)
-				{
-					int j = rnd.Next(i, order.Length);
-					int tmp = order[i];
-					order[i] = order[j];
-					order[j] = tmp;
-				}
-			}
-			else
-			{
-				order = new int[] { 0, 1, 2, 5, 8, 7, 6, 3 };
-			}
+			List<PathFindNode> path = new List<PathFindNode>();
+			//Create path
 			float waterHeight = 0;
 			foreach (float h in heights)
 				waterHeight += h ;
@@ -82,8 +65,8 @@ public class RoadGenerator : MonoBehaviour {
 				}
 			}
 			int x2, y2, number = 0;
-			int x1 = rnd.Next(pathFindingGraphSize / 3 * (order[number % order.Length] % 3)+10, pathFindingGraphSize / 3 * (order[number % order.Length] % 3 + 1)-10);
-			int y1 = rnd.Next(pathFindingGraphSize / 3 * (order[number % order.Length] / 3)+10, pathFindingGraphSize / 3 * (order[number % order.Length] / 3 + 1)-10);
+			int x1 = rnd.Next(pathFindingGraphSize + 10, pathFindingGraphSize -10);
+			int y1 = rnd.Next(pathFindingGraphSize + 10, pathFindingGraphSize - 10);
 			for (int i = 0; i < numCheckpoints; i++)
 			{
 				if (i == numCheckpoints-1)
@@ -93,8 +76,8 @@ public class RoadGenerator : MonoBehaviour {
 				}
 				else
 				{
-					x2 = rnd.Next(pathFindingGraphSize / 3 * (order[number % order.Length] % 3) + 10, pathFindingGraphSize / 3 * (order[number % order.Length] % 3 + 1) - 10);
-					y2 = rnd.Next(pathFindingGraphSize / 3 * (order[number % order.Length] / 3) + 10, pathFindingGraphSize / 3 * (order[number % order.Length] / 3 + 1) - 10);
+					x2 = rnd.Next(pathFindingGraphSize + 10, pathFindingGraphSize - 10);
+					y2 = rnd.Next(pathFindingGraphSize + 10, pathFindingGraphSize - 10);
 				}
 				LinkedList<PathFindNode> p = PathFind(x1, y1, x2, y2, nodes);
 				if(p == null)
