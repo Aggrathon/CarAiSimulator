@@ -7,8 +7,7 @@ using System.Threading;
 [ExecuteInEditMode]
 public class TerrainGenerator : MonoBehaviour
 {
-
-	public bool generateOnStart = false;
+	
 	public DetailLayer[] detailLayers;
 	public Transform water;
 	public ReflectionProbe reflection;
@@ -24,13 +23,6 @@ public class TerrainGenerator : MonoBehaviour
 		terrain = GetComponent<Terrain>();
 	}
 
-	void Start()
-	{
-		if (generateOnStart)
-			Generate();
-		else
-			reflection.RenderProbe();
-	}
 
 	[ContextMenu("Generate")]
 	public void Generate()

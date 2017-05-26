@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
+using System;
 
 [RequireComponent(typeof(Terrain))]
 [ExecuteInEditMode]
@@ -17,9 +18,12 @@ public class RoadGenerator : MonoBehaviour {
 	float[,] tempHeights;
 	float[,,] tempTextures;
 	Thread thread;
+	string status;
+
 	[HideInInspector]
 	public List<Vector3> road;
-	string status;
+	[NonSerialized]
+	public Action onGenerated;
 
 	private void Awake()
 	{
@@ -168,12 +172,22 @@ public class RoadGenerator : MonoBehaviour {
 		yield return null;
 		reflection.RenderProbe();
 		Debug.Log("Generated Road");
+		if (onGenerated != null)
+			onGenerated();
 	}
 
 	private void OnDisable()
 	{
 		if (thread != null)
 			thread.Abort();
+	}
+
+	public bool IsRoad(Vector3 pos)
+	{
+		int x = (int)((pos.x - transform.position.x) / terrain.terrainData.size.x * terrain.terrainData.alphamapWidth);
+		int y = (int)((pos.z - transform.position.z) / terrain.terrainData.size.z * terrain.terrainData.alphamapHeight);
+		float[,,] alpha = terrain.terrainData.GetAlphamaps(x, y, 1, 1);
+		return alpha[0, 0, alpha.GetUpperBound(2)] > 0.5f;
 	}
 
 
