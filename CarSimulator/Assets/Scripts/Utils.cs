@@ -15,4 +15,9 @@ public static class Utils {
 	{
 		return ((float)(ax * ax + ay*ay - bx * bx - by*by) / (float)length2 + 1f) / 2f;
 	}
+
+	public static bool InMargin(int x, int y, int width, int height, int margin)
+	{
+		return x - margin > 0 && x + margin < width && y - margin > 0 && y + margin < height;
+	}
 }

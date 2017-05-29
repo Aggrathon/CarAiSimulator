@@ -54,7 +54,9 @@ public class TrackManager : MonoBehaviour {
 		else
 		{
 			car.MovePosition(road.road[checkpoint] + new Vector3(0, 2, 0));
-			car.MoveRotation(Quaternion.LookRotation(road.road[(checkpoint + 1) % road.road.Count] - road.road[checkpoint], Vector3.up));
+			car.MoveRotation(Quaternion.LookRotation(road.road[(checkpoint + 1) % road.road.Count] - road.road[checkpoint]));
+			car.angularVelocity = Vector3.zero;
+			car.velocity = Vector3.zero;
 			resetTime = 0f;
 			resetText.gameObject.SetActive(false);
 			NextCheckpoint();
@@ -94,7 +96,7 @@ public class TrackManager : MonoBehaviour {
 		else
 		{
 			resetTime += Time.deltaTime;
-			if(resetTime > 3)
+			if(resetTime > 4)
 			{
 				resetText.gameObject.SetActive(true);
 				resetText.text = "Resetting car in "+(int)(resetTimeout-resetTime)+" seconds";
