@@ -1,6 +1,4 @@
 
-# Created by https://www.gitignore.io/api/linux,unity,python,windows,virtualenv,visualstudio,visualstudiocode
-
 ### Linux ###
 *~
 
@@ -152,22 +150,8 @@ sysinfo.txt
 *.apk
 *.unitypackage
 
-### VirtualEnv ###
-# Virtualenv
-[Bb]in
-[Ii]nclude
-[Ll]ib
-[Ll]ib64
-[Ll]ocal
-pyvenv.cfg
-pip-selfcheck.json
-
 ### VisualStudioCode ###
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+.vscode/
 
 ### Windows ###
 # Windows thumbnail cache files

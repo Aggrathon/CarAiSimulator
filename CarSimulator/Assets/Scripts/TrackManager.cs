@@ -5,6 +5,13 @@ using UnityEngine.UI;
 
 public class TrackManager : MonoBehaviour {
 
+	public enum DriverState
+	{
+		playing,
+		training,
+		ai
+	}
+
 	public TerrainGenerator terrain;
 	public RoadGenerator road;
 	public Rigidbody car;
@@ -22,8 +29,11 @@ public class TrackManager : MonoBehaviour {
 
 	float resetTime = 0f;
 	int checkpoint = 0;
+	[System.NonSerialized]
+	public DriverState driverState;
 
 	void Start () {
+		driverState = DriverState.playing;
 		if (generateOnLoad)
 			GenerateTrack();
 		else
