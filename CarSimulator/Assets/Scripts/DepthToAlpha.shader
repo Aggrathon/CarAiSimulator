@@ -1,4 +1,4 @@
-﻿Shader "PostProcessing/DepthToAlpha"
+﻿Shader "CameraAI/DepthToAlpha"
 {
 	Properties
 	{
@@ -43,7 +43,9 @@
 			fixed4 frag (v2f i) : SV_Target
 			{
 				fixed4 col = tex2D(_MainTex, i.uv);
-				col.rgb = Linear01Depth(tex2D(_CameraDepthTexture, i.uv));
+			
+				col.a = 1-Linear01Depth(tex2D(_CameraDepthTexture, i.uv));
+				col.a = col.a*col.a;
 				return col;
 			}
 			ENDCG
