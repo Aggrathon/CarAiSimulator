@@ -9,40 +9,132 @@ using System.Text;
 public class CommunicationManager : MonoBehaviour {
 
 	const int PORT = 38698;
+	const int BUFFER_SIZE = 1 << 18;
 	const byte SIMULATOR_RECORD = 30;
 	const byte SIMULATOR_DRIVE = 31;
 
+	public CarSteering car;
+	public GameObject reconnectButton;
+	public float connectionTimeout = 20;
+	public RenderTexture cameraView;
+	public TrackManager track;
+	public Speedometer speedometer;
+	[Range(0f,1f)]
+	public float sendInterval = 0.1f;
+
 	Thread thread;
 	byte[] buffer;
+	Texture2D texture;
+	bool requireTexture;
+	float lastSend;
+	int imageSize;
 
-	void Start () {
-		buffer = new byte[256];
+	void OnEnable () {
+		reconnectButton.SetActive(false);
+		if (buffer == null) buffer = new byte[BUFFER_SIZE];
+		if (thread != null && thread.IsAlive) thread.Abort();
+		if (texture == null) texture = new Texture2D(cameraView.width, cameraView.height);
+		imageSize = texture.width * texture.height;
 		thread = new Thread(Thread);
 		thread.Start();
+		requireTexture = false;
 	}
 
 	private void OnDestroy()
 	{
-		if (thread != null)
+		if (thread != null && thread.IsAlive)
 			thread.Abort();
+	}
+
+	private void Update()
+	{
+		if(requireTexture && Time.timeScale > 0 && lastSend < Time.time)
+		{
+			lastSend = Time.time + sendInterval;
+			RenderTexture.active = cameraView;
+			texture = new Texture2D(cameraView.width, cameraView.height);
+			texture.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0);
+			texture.Apply();
+			for (int i = 0; i < texture.width; i++)
+			{
+				for (int j = 0; j < texture.height; j++)
+				{
+					Color32 c = texture.GetPixel(i, j);
+					buffer[i + texture.width * j] = c.r;
+					buffer[i + texture.width * j + imageSize] = c.g;
+					buffer[i + texture.width * j + imageSize + imageSize] = c.b;
+					buffer[i + texture.width * j + imageSize + imageSize + imageSize] = c.a;
+				}
+			}
+			requireTexture = false;
+		}
+		else if (thread == null || !thread.IsAlive)
+		{
+			if (!car.userInput) car.userInput = true;
+			reconnectButton.SetActive(true);
+			enabled = false;
+			thread = null;
+		}
 	}
 
 	void Thread()
 	{
 		Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-		socket.Connect("localhost", PORT);
-		socket.Receive(buffer);
-		switch (buffer[0])
+		try
 		{
-			case SIMULATOR_RECORD:
-				break;
-			case SIMULATOR_DRIVE:
-				break;
+			socket.Connect("localhost", PORT);
+			socket.Receive(buffer);
+			switch (buffer[0])
+			{
+				case SIMULATOR_RECORD:
+					car.userInput = true;
+					while (car.verticalSteering == 0f) ;
+					while (true)
+					{
+						if (socket.Send(buffer, FillStatusBuffer(), SocketFlags.None) == 0)
+							break;
+					}
+					break;
+				case SIMULATOR_DRIVE:
+					car.userInput = false;
+					while (true)
+					{
+						socket.Send(buffer, FillStatusBuffer(), SocketFlags.None);
+						int amount = socket.Receive(buffer);
+						if (amount < 2)
+							break;
+						car.horizontalSteering = ((float)buffer[0]) / 127.5f - 1f;
+						car.verticalSteering = ((float)buffer[1]) / 127.5f - 1f;
+					}
+					break;
+			}
 		}
-		socket.Send(Encoding.UTF8.GetBytes("Sent From Unity"));
-		socket.Shutdown(SocketShutdown.Both);
-		socket.Close();
-		thread = null;
+		catch (ThreadAbortException)
+		{
+			thread = null;
+		}
+		catch (System.Exception e)
+		{
+			thread = null;
+			Debug.LogException(e);
+		}
+		finally
+		{
+			socket.Shutdown(SocketShutdown.Both);
+			socket.Close();
+			thread = null;
+		}
+	}
+
+	int FillStatusBuffer()
+	{
+		requireTexture = true;
+		while (requireTexture) ;
+		buffer[imageSize + 0] = (byte)((track.directionAngle / 180f + 1) * 127.5f);
+		buffer[imageSize + 1] = (byte)(speedometer.speed*2 + 100);
+		buffer[imageSize + 2] = (byte)(car.horizontalSteering * 127.5f + 127.5f);
+		buffer[imageSize + 3] = (byte)(car.verticalSteering * 127.5f + 127.5f);
+		return imageSize + 4;
 	}
 
 }

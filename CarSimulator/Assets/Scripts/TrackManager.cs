@@ -5,13 +5,6 @@ using UnityEngine.UI;
 
 public class TrackManager : MonoBehaviour {
 
-	public enum DriverState
-	{
-		playing,
-		training,
-		ai
-	}
-
 	public TerrainGenerator terrain;
 	public RoadGenerator road;
 	public Rigidbody car;
@@ -30,10 +23,9 @@ public class TrackManager : MonoBehaviour {
 	float resetTime = 0f;
 	int checkpoint = 0;
 	[System.NonSerialized]
-	public DriverState driverState;
+	public float directionAngle;
 
 	void Start () {
-		driverState = DriverState.playing;
 		if (generateOnLoad)
 			GenerateTrack();
 		else
@@ -121,7 +113,8 @@ public class TrackManager : MonoBehaviour {
 	void CheckTrackProgression()
 	{
 		Vector3 direction = road.road[checkpoint%road.road.Count] - car.position;
-		directionArrow.rotation = Quaternion.Euler(0, 0, -Vector3.SignedAngle(car.transform.forward, direction, Vector3.up));
+		directionAngle = Vector3.SignedAngle(car.transform.forward, direction, Vector3.up);
+		directionArrow.rotation = Quaternion.Euler(0, 0, -directionAngle);
 		if (Vector3.SqrMagnitude(direction) < waypointDistance * waypointDistance)
 			NextCheckpoint();
 	}

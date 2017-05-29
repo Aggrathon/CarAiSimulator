@@ -445,11 +445,7 @@ paket-files/
 # Telerik's JustMock configuration file
 *.jmconfig
 
-# BizTalk build output
-*.btp.cs
-*.btm.cs
-*.odx.cs
-*.xsd.cs
 
-# End of https://www.gitignore.io/api/linux,unity,python,windows,virtualenv,visualstudio,visualstudiocode
+## OWN ##
 *.blend1
+*.tfrecords

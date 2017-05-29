@@ -2,7 +2,7 @@
 import socket
 
 PORT = 38698
-BUFFER_SIZE = 4096
+BUFFER_SIZE = 1 << 18
 SIMULATOR_RECORD = 30
 SIMULATOR_DRIVE = 31
 
@@ -12,6 +12,7 @@ class Communicator():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
             server_socket.bind(("localhost", PORT))
             server_socket.listen(1)
+            print("Waiting for Connection...", end='\r')
             self.socket, _ = server_socket.accept()
             self.socket.send(bytearray([mode]))
 
@@ -25,9 +26,9 @@ class Communicator():
         self.socket.close()
     
     def __enter__(self):
-        pass
+        return self
     
-    def __exit__(self):
+    def __exit__(self, a, b, c):
         self.close()
 
 if __name__ == "__main__":
