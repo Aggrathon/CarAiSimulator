@@ -19,9 +19,9 @@ def record_data():
     print()
     return records
 
-def save_data(records, start, step, ):
+def save_data(records, start, step):
     counter = start
-    os.makedirs("data")
+    os.makedirs("data", exist_ok=True)
     timestamp = '{:%Y%m%d%H%M%S}'.format(datetime.datetime.now())
     with tf.python_io.TFRecordWriter("data/training_%s_%i.tfrecords"%(timestamp, start)) as writer:
         while counter < len(records):
@@ -40,7 +40,38 @@ def save_data(records, start, step, ):
     if start == 0:
         print()
 
+
+def read_data(batch_size=64):
+    reader = tf.TFRecordReader()
+    filename_queue = tf.train.string_input_producer([os.path.join('data', f) for f in os.listdir('data') if '.tfrecord' in f])
+    _, serialized_example = reader.read(filename_queue)
+    features = tf.parse_single_example(
+        serialized_example,
+        features={
+            'camera': tf.FixedLenFeature([256*128], tf.int64),
+            'direction': tf.FixedLenFeature([], tf.float32),
+            'speed': tf.FixedLenFeature([], tf.float32),
+            'horizontal': tf.FixedLenFeature([], tf.float32),
+            'vertical': tf.FixedLenFeature([], tf.float32)
+        })
+    
+    camera = features['camera']
+    speed = features['speed']
+    direction = features['direction']
+    horizontal = features['horizontal']
+    vertical = features['vertical']
+    
+    camera = tf.cast(camera, tf.float32) / 255.
+    x = tf.concat([camera, tf.reshape(speed, [1]), tf.reshape(direction, [1])], 0)
+    y = tf.stack([horizontal, vertical], 0)
+    return tf.train.shuffle_batch([x, y], batch_size, 2000, 1000)
+
+
 if __name__ == "__main__":
     data = record_data()
-    for i in range(4):
-        Thread(target=save_data, args=(data, i, 4)).start()
+    num_thr = 8
+    threads = [Thread(target=save_data, args=(data, i, num_thr)) for i in range(num_thr)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
