@@ -130,11 +130,11 @@ public class CommunicationManager : MonoBehaviour {
 	{
 		requireTexture = true;
 		while (requireTexture) ;
-		buffer[imageSize + 0] = (byte)((track.directionAngle / 180f + 1) * 127.5f);
-		buffer[imageSize + 1] = (byte)(speedometer.speed*2 + 100);
-		buffer[imageSize + 2] = (byte)(car.horizontalSteering * 127.5f + 127.5f);
-		buffer[imageSize + 3] = (byte)(car.verticalSteering * 127.5f + 127.5f);
-		return imageSize + 4;
+		buffer[imageSize*4 + 0] = (byte)((track.directionAngle / 180f + 1) * 127.5f);
+		buffer[imageSize*4 + 1] = (byte)(speedometer.speed*2 + 100);
+		buffer[imageSize*4 + 2] = (byte)(car.horizontalSteering * 127.5f + 127.5f);
+		buffer[imageSize*4 + 3] = (byte)(car.verticalSteering * 127.5f + 127.5f);
+		return imageSize*4 + 4;
 	}
 
 }

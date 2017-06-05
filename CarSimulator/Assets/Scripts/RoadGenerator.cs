@@ -106,8 +106,11 @@ public class RoadGenerator : MonoBehaviour {
 				tempHeights = heights;
 				tempTextures = textures;
 				List<Vector3> road = new List<Vector3>();
-				foreach (var n in path)
-					road.Add(n.GetPosition(pathFindingSpacing * heightScaleX, heightScaleY, offset, pathFindingGraphMargin));
+				foreach (var n in path) {
+					Vector3 pos = n.GetPosition(pathFindingSpacing * heightScaleX, heightScaleY, offset, pathFindingGraphMargin);
+					if(road.Count < 1 || Vector3.SqrMagnitude(pos-road[road.Count-1]) > 1)
+						road.Add(pos);
+				}
 				this.road = road;
 			}
 			catch (Exception e)
