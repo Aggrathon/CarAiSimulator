@@ -34,7 +34,7 @@ def write_data(data_queue, id):
             data_queue.task_done()
 
 
-def read_data(batch_size=64):
+def read_data(batch_size=256):
     reader = tf.TFRecordReader()
     filename_queue = tf.train.string_input_producer([os.path.join('data', f) for f in os.listdir('data') if '.tfrecord' in f])
     _, serialized_example = reader.read(filename_queue)
@@ -44,7 +44,7 @@ def read_data(batch_size=64):
             'input': tf.FixedLenFeature([256*128*4+2], tf.float32),
             'output': tf.FixedLenFeature([2], tf.float32)
         })
-    return tf.train.shuffle_batch([features['input'], features['output']], batch_size, 2000, 1000)
+    return tf.train.shuffle_batch([features['input'], features['output']], batch_size, 4000, 1000)
 
 
 if __name__ == "__main__":

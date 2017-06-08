@@ -12,7 +12,7 @@ class Communicator():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
             server_socket.bind(("localhost", PORT))
             server_socket.listen(1)
-            print("Waiting for Connection...", end='\r')
+            print("Waiting for Connection...")
             self.socket, _ = server_socket.accept()
             print("Connection established")
 
@@ -64,13 +64,6 @@ class Recorder(Communicator):
 
 class Driver(Recorder):
     mode = SIMULATOR_DRIVE
-
-    def get_status(self):
-        res = super().get_status()
-        if res is None:
-            raise StopIteration
-            return None
-        return [res[0]], [res[1]]
 
     def set_action(self, h, v):
         print("Driving | h: %.2f  v: %.2f"%(h,v), end='\r')

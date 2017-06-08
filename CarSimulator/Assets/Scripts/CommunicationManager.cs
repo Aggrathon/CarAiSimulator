@@ -113,6 +113,10 @@ public class CommunicationManager : MonoBehaviour {
 		{
 			thread = null;
 		}
+		catch (SocketException)
+		{
+			thread = null;
+		}
 		catch (System.Exception e)
 		{
 			thread = null;

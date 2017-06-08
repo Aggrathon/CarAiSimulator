@@ -4,11 +4,16 @@ from communication import Driver
 
 
 def main():
-    tf.logging.set_verbosity(tf.logging.INFO)
+    tf.logging.set_verbosity(tf.logging.WARN)
     nn = Estimator()
     with Driver() as driver:
-        for p in nn.predict(input_fn=driver.get_status):
-            driver.set_action(p['output'][0], p['output'][1])
+        def inp():
+            res = driver.get_status()
+            return tf.train.batch([res[0], res[1]], 1, 1, 1, False)
+        while True:
+            for p in nn.predict(input_fn=inp):
+                driver.set_action(p['horizontal'], p['vertical'])
+                break
 
 
 if __name__ == "__main__":
