@@ -66,7 +66,7 @@ class Driver(Recorder):
     mode = SIMULATOR_DRIVE
 
     def set_action(self, h, v):
-        print("Driving | h: %.2f  v: %.2f"%(h,v), end='\r')
+        print("Driving  |  h: %.2f  v: %.2f"%(h,v))
         self.send(bytes([int(h*127.5+127.5), int(v*127.5+127.5)]))
 
 

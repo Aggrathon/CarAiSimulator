@@ -1,11 +1,11 @@
 import tensorflow as tf
-from network import Estimator
+from model import Network
 from record import read_data
 
 def main():
     tf.logging.set_verbosity(tf.logging.INFO)
-    nn = Estimator()
-    nn.train(input_fn=read_data, steps=10000)
+    nn = Network()
+    nn.train(read_data, 10000)
 
 
 if __name__ == "__main__":

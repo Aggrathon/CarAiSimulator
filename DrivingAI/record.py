@@ -44,7 +44,7 @@ def read_data(batch_size=256):
             'input': tf.FixedLenFeature([256*128*4+2], tf.float32),
             'output': tf.FixedLenFeature([2], tf.float32)
         })
-    return tf.train.shuffle_batch([features['input'], features['output']], batch_size, 4000, 1000)
+    return tf.train.shuffle_batch([features['input'], features['output']], batch_size, 8000, 1000)
 
 
 if __name__ == "__main__":
