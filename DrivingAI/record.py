@@ -4,6 +4,10 @@ from threading import Thread
 from queue import Queue
 import os
 import datetime
+import random
+
+DATA_DIRECTORY = os.path.join('data', 'records')
+
 
 def record_data(data_queue):
     counter = 0
@@ -21,9 +25,9 @@ def record_data(data_queue):
     print()
 
 def write_data(data_queue, id):
-    os.makedirs("data", exist_ok=True)
+    os.makedirs(DATA_DIRECTORY, exist_ok=True)
     timestamp = '{:%Y%m%d%H%M%S}'.format(datetime.datetime.now())
-    with tf.python_io.TFRecordWriter("data/training_%s_%i.tfrecords"%(timestamp, id)) as writer:
+    with tf.python_io.TFRecordWriter(os.path.join(DATA_DIRECTORY,"training_%s_%i.tfrecords"%(timestamp, id))) as writer:
         while True:
             data_in, data_out = Recorder.bytes_to_tensor(data_queue.get())
             record = tf.train.Example(features=tf.train.Features(feature={
@@ -36,7 +40,9 @@ def write_data(data_queue, id):
 
 def read_data(batch_size=256):
     reader = tf.TFRecordReader()
-    filename_queue = tf.train.string_input_producer([os.path.join('data', f) for f in os.listdir('data') if '.tfrecord' in f])
+    files = [os.path.join(DATA_DIRECTORY, f) for f in os.listdir(DATA_DIRECTORY) if '.tfrecord' in f]
+    random.shuffle(files)
+    filename_queue = tf.train.string_input_producer(files)
     _, serialized_example = reader.read(filename_queue)
     features = tf.parse_single_example(
         serialized_example,

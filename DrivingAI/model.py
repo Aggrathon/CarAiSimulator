@@ -4,32 +4,27 @@ import os
 
 
 class Network():
-    directory = 'data'
-    file_name = os.path.join(directory, 'model')
+    network_directory = os.path.join('data', 'network')
+    log_directory = os.path.join('data', 'logs')
+    model_file_name = os.path.join(network_directory, 'model')
 
     def __init__(self, image_width=256, image_height=128, additional_variables=2):
         self.image_width = image_width
         self.image_height = image_height
         self.additional_variables = additional_variables
         self.global_step = tf.Variable(0, name='global_step')
-        self.input = None
-        self.example = None
         self.output = None
-        self.loss_example = None
-        self.train_example = None
+        self.loss = None
+        self.trainer = None
+        os.makedirs(self.log_directory, exist_ok=True)
+        os.makedirs(self.network_directory, exist_ok=True)
 
 
-    def _create_model_placeholder(self, training=True):
-        self._create_model(
-            tf.placeholder(tf.float32, [None, self.image_width*self.image_height*4+self.additional_variables]),
-            tf.placeholder(tf.float32, [None, 2]),
-            None,
-            training
-        )
+    def _get_x_placeholder(self):
+        return tf.placeholder(tf.float32, [None, self.image_width*self.image_height*4+self.additional_variables])
 
     def _create_model(self, x, y, l, training=True):
-        self.input = x
-        image, variables = tf.split(self.input, [-1, self.additional_variables], 1)
+        image, variables = tf.split(x, [-1, self.additional_variables], 1)
         prev_layer = tf.reshape(image ,[-1, 256, 128, 4])
         # Convolutional layers here
         prev_layer = tf.layers.batch_normalization(prev_layer, training=training)
@@ -47,10 +42,17 @@ class Network():
             prev_layer = tf.layers.dropout(prev_layer, 0.4, training=training)
         self.output = tf.layers.dense(prev_layer, 2, activation=tf.nn.tanh)
         # Trainers and losses here
-        self.example = y
-        self.loss_example = tf.losses.mean_squared_error(self.example, self.output)
-        adam = tf.train.AdamOptimizer(1e-4)
-        self.train_example = adam.minimize(self.loss_example, self.global_step)
+        if y is not None:
+            self.loss = tf.losses.mean_squared_error(y, self.output)
+            adam = tf.train.AdamOptimizer(1e-5)
+            self.trainer = adam.minimize(self.loss, self.global_step)
+            tf.summary.scalar('loss', self.loss)
+            h, v = tf.split(self.output, [1,1], 1)
+            tf.summary.histogram('horizontal', h)
+            tf.summary.histogram('vertical', v)
+        else:
+            #TODO self learning by driving?
+            pass
 
 
     def get_session(self):
@@ -59,44 +61,52 @@ class Network():
         session.run(tf.global_variables_initializer())
         tf.train.start_queue_runners(session)
         try:
-            ckpt = tf.train.get_checkpoint_state(self.directory)
+            ckpt = tf.train.get_checkpoint_state(self.network_directory)
             saver.restore(session, ckpt.model_checkpoint_path)
             print("\nLoaded an existing network\n")
         except Exception as e:
             print("\nCreated a new network (%s)\n"%repr(e))
         return session, saver
 
-    def train_step(self, session, feed_dict=None, summary_interval=0):
+    def train_step(self, session, feed_dict=None, summary=False, summary_writer=None, summary_ops=None):
         pre = timer()
-        _, loss, step = session.run([self.train_example, self.loss_example, self.global_step], feed_dict=feed_dict)
-        print("Training step: %i, loss: %.3f (%.2f s)"%(step, loss, timer()-pre))
-        if summary_interval > 0 and step%summary_interval == 0:
-            pass #TODO summaries
+        if summary and summary_writer is not None and summary_ops is not None:
+            _, loss, step, summary = session.run([self.trainer, self.loss, self.global_step, summary_ops], feed_dict=feed_dict)
+            summary_writer.add_summary(summary, step)
+            print("Training step: %i, loss: %.3f [%.2f s]"%(step, loss, timer()-pre))
+        else:
+            _, loss, step = session.run([self.trainer, self.loss, self.global_step], feed_dict=feed_dict)
+            print("Training step: %i, loss: %.3f (%.2f s)"%(step, loss, timer()-pre))
         return step, loss
     
     def train(self, batch_fn, iterations=1000, summary_interval=10):
         x, y = batch_fn()
         self._create_model(x, y, None, True)
+        summary_ops = tf.summary.merge_all()
         session, saver = self.get_session()
+        summary_writer = tf.summary.FileWriter(self.log_directory, session.graph)
         try:
             last_save = timer()
+            step = 1
             for _ in range(iterations):
-                self.train_step(session, None, summary_interval)
+                step, _ = self.train_step(session, None, step%summary_interval==0, summary_writer, summary_ops)
                 if timer() - last_save > 1800:
-                    saver.save(session, self.file_name, self.global_step)
+                    saver.save(session, self.model_file_name, self.global_step)
                     last_save = timer()
         except KeyboardInterrupt:
             print("Stopping the training")
         finally:
-            saver.save(session, self.file_name, self.global_step)
+            saver.save(session, self.model_file_name, self.global_step)
+            summary_writer.close()
             session.close()
 
     def predict(self, input_fn, output_fn):
-        self._create_model_placeholder(False)
+        x = self._get_x_placeholder()
+        self._create_model(x, None, None, False)
         session, _ = self.get_session()
         try:
             while True:
-                out = session.run([self.output], feed_dict={self.input:input_fn()})
+                out = session.run([self.output], feed_dict={x: input_fn()})
                 output_fn(out[0][0])
         except (KeyboardInterrupt, StopIteration):
             pass
