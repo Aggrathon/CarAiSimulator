@@ -116,6 +116,10 @@ public class TrackManager : MonoBehaviour {
 		directionAngle = Vector3.SignedAngle(car.transform.forward, direction, Vector3.up);
 		directionArrow.rotation = Quaternion.Euler(0, 0, -directionAngle);
 		if (Vector3.SqrMagnitude(direction) < waypointDistance * waypointDistance)
-			NextCheckpoint();
+		{
+			if (Vector3.SqrMagnitude(direction) < 0.5f * waypointDistance * waypointDistance
+				|| Vector3.Angle(direction, road.road[(checkpoint+1) % road.road.Count] - car.position) < 30)
+				NextCheckpoint();
+		}
 	}
 }

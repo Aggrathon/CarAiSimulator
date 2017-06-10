@@ -81,7 +81,7 @@ public class RoadGenerator : MonoBehaviour {
 					{
 						x2 = rnd.Next(1, pathFindingGraphSize - 1);
 						y2 = rnd.Next(1, pathFindingGraphSize - 1);
-						if(i%4 != 0)
+						if(i%3 != 0)
 							while((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1) > pathFindingGraphSize*pathFindingGraphSize/16)
 							{
 								x2 = rnd.Next(1, pathFindingGraphSize - 1);

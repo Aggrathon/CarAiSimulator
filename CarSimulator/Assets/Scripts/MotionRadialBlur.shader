@@ -68,7 +68,7 @@
 
 				half t = dist * _BlurStrength * _ScreenParams.w;
 				t = clamp(t, 0.0, 1.0);
-				half4 c = lerp(color, blur, t*t);
+				half4 c = lerp(color, blur, t);
 				return c;
 			}
 
