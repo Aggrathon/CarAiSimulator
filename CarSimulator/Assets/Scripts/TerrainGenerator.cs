@@ -16,7 +16,6 @@ public class TerrainGenerator : MonoBehaviour
 	Thread thread;
 	float[,] tempHeights;
 	float[,,] tempTextures;
-	float waterHeight;
 
 	private void Awake()
 	{
@@ -36,6 +35,7 @@ public class TerrainGenerator : MonoBehaviour
 		float mapHeight = terrain.terrainData.heightmapScale.y;
 		float mapWidth = terrain.terrainData.heightmapWidth;
 		int textureSize = terrain.terrainData.alphamapWidth;
+		float waterHeight = water.position.y / mapHeight;
 		float[,,] textures = terrain.terrainData.GetAlphamaps(0, 0, textureSize, textureSize);
 		for (int h = 0; h < detailLayers.Length; h++)
 		{
@@ -50,10 +50,9 @@ public class TerrainGenerator : MonoBehaviour
 				{
 					float px = (float)i / size * 2f - 1f;
 					float py = (float)j / size * 2f - 1f;
-					float height = Mathf.Sqrt(px * px + py * py)-0.3f;
+					float height = 0.95f - Mathf.Sqrt(px * px*6 + py * py*6)*0.38f;
 					px = px * (float)mapWidth / 1000;
 					py = py * (float)mapWidth / 1000;
-					height = height*height * 0.7f + 0.25f;
 					for (int h = 0; h < detailLayers.Length; h++)
 					{
 						float detail = Mathf.PerlinNoise(
@@ -70,9 +69,8 @@ public class TerrainGenerator : MonoBehaviour
 				}
 			}
 			float meanHeight = sumHeight / (size * size);
-			waterHeight = meanHeight / 1.8f * mapHeight;
-			float sandHeight = meanHeight / 1.7f;
-			float mountainHeight = meanHeight * 1.4f;
+			float sandHeight = waterHeight+0.04f;
+			float mountainHeight = (meanHeight*1.5f+0.9f)*0.5f;
 			for (int i = 0; i < textureSize; i++)
 			{
 				for (int j = 0; j < textureSize; j++)
@@ -83,7 +81,16 @@ public class TerrainGenerator : MonoBehaviour
 					textures[i, j, 2] = Mathf.Clamp01(Mathf.Pow((heights[x, y] - mountainHeight) * 8, 3));
 					textures[i, j, 4] = 0;
 					textures[i, j, 1] = 0;
-					textures[i, j, 0] = 1 - textures[i, j, 3] - textures[i, j, 2];
+					if (heights[x, y] < sandHeight)
+					{
+						textures[i, j, 0] = 0;
+						textures[i, j, 5] = 1 - textures[i, j, 3];
+					}
+					else
+					{
+						textures[i, j, 0] = 1 - textures[i, j, 3] - textures[i, j, 2];
+						textures[i, j, 5] = 0;
+					}
 				}
 			}
 			tempTextures = textures;
@@ -101,7 +108,6 @@ public class TerrainGenerator : MonoBehaviour
 		terrain.terrainData.SetHeights(0, 0, tempHeights);
 		terrain.terrainData.SetAlphamaps(0, 0, tempTextures);
 		terrain.Flush();
-		water.position = new Vector3(water.position.x, waterHeight, water.position.z);
 		tempHeights = null;
 		tempTextures = null;
 		thread = null;

@@ -708,8 +708,8 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1771249745005176}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 156, y: 300, z: 234}
+  m_LocalRotation: {x: 0, y: -0.09949349, z: 0, w: 0.9950383}
+  m_LocalPosition: {x: 1, y: 203.36, z: 352.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4962568169063202}
@@ -719,7 +719,7 @@ Transform:
   - {fileID: 4135357222843366}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -11.42, z: 0}
 --- !u!23 &23154710238141664
 MeshRenderer:
   m_ObjectHideFlags: 1
@@ -894,7 +894,7 @@ MeshRenderer:
   m_ReceiveShadows: 1
   m_MotionVectors: 1
   m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
+  m_ReflectionProbeUsage: 2
   m_Materials:
   - {fileID: 2100000, guid: daa155c9896f84c4899159771d996be1, type: 2}
   - {fileID: 2100000, guid: d497a1bce121af548b1d2d5741558d19, type: 2}
@@ -929,7 +929,7 @@ MeshRenderer:
   m_ReceiveShadows: 1
   m_MotionVectors: 1
   m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
+  m_ReflectionProbeUsage: 2
   m_Materials:
   - {fileID: 2100000, guid: daa155c9896f84c4899159771d996be1, type: 2}
   - {fileID: 2100000, guid: d497a1bce121af548b1d2d5741558d19, type: 2}
@@ -997,7 +997,7 @@ MeshRenderer:
   m_ReceiveShadows: 1
   m_MotionVectors: 1
   m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
+  m_ReflectionProbeUsage: 2
   m_Materials:
   - {fileID: 2100000, guid: daa155c9896f84c4899159771d996be1, type: 2}
   - {fileID: 2100000, guid: d497a1bce121af548b1d2d5741558d19, type: 2}
@@ -1032,7 +1032,7 @@ MeshRenderer:
   m_ReceiveShadows: 1
   m_MotionVectors: 1
   m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
+  m_ReflectionProbeUsage: 2
   m_Materials:
   - {fileID: 2100000, guid: daa155c9896f84c4899159771d996be1, type: 2}
   - {fileID: 2100000, guid: d497a1bce121af548b1d2d5741558d19, type: 2}
@@ -1649,6 +1649,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96468c245ae8e0d4f8f1c7a7b8b0542e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _userInput: 1
 --- !u!114 &114506489966001946
 MonoBehaviour:
   m_ObjectHideFlags: 1

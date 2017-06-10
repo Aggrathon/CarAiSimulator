@@ -8,11 +8,13 @@ using System;
 [ExecuteInEditMode]
 public class RoadGenerator : MonoBehaviour {
 
+	public Transform water;
 	public ReflectionProbe reflection;
 	public int heightPenalty = 30;
 	public int numCheckpoints = 8;
 	public int roadWidth = 10;
 	public int pathFindingSpacing = 10;
+	public int roadTextureIndex = 4;
 
 	Terrain terrain;
 	float[,] tempHeights;
@@ -45,6 +47,7 @@ public class RoadGenerator : MonoBehaviour {
 		int textureWidth = terrain.terrainData.alphamapWidth;
 		float[,,] textures = terrain.terrainData.GetAlphamaps(0, 0, textureWidth, textureWidth);
 		Vector3 offset = transform.position;
+		float waterHeight = water.position.y / terrain.terrainData.heightmapScale.y + 0.03f;
 
 		thread = new Thread(() => {
 			try
@@ -52,10 +55,6 @@ public class RoadGenerator : MonoBehaviour {
 				System.Random rnd = new System.Random();
 				List<PathFindNode> path = new List<PathFindNode>();
 				//Create path
-				float waterHeight = 0;
-				foreach (float h in heights)
-					waterHeight += h;
-				waterHeight /= heights.Length * 1.78f;
 				int pathFindingGraphMargin = 5;
 				int pathFindingGraphSize = heightWidth / pathFindingSpacing - 2 * pathFindingGraphMargin;
 				PathFindNode[,] nodes = new PathFindNode[pathFindingGraphSize, pathFindingGraphSize];
@@ -82,6 +81,12 @@ public class RoadGenerator : MonoBehaviour {
 					{
 						x2 = rnd.Next(1, pathFindingGraphSize - 1);
 						y2 = rnd.Next(1, pathFindingGraphSize - 1);
+						if(i%4 != 0)
+							while((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1) > pathFindingGraphSize*pathFindingGraphSize/16)
+							{
+								x2 = rnd.Next(1, pathFindingGraphSize - 1);
+								y2 = rnd.Next(1, pathFindingGraphSize - 1);
+							}
 					}
 					LinkedList<PathFindNode> p = PathFind(x1, y1, x2, y2, nodes);
 					if (p == null)
@@ -168,7 +173,7 @@ public class RoadGenerator : MonoBehaviour {
 		int x = (int)((pos.x - transform.position.x) / terrain.terrainData.size.x * terrain.terrainData.alphamapWidth);
 		int y = (int)((pos.z - transform.position.z) / terrain.terrainData.size.z * terrain.terrainData.alphamapHeight);
 		float[,,] alpha = terrain.terrainData.GetAlphamaps(x, y, 1, 1);
-		return alpha[0, 0, alpha.GetUpperBound(2)] > 0.5f;
+		return alpha[0, 0, roadTextureIndex] > 0.5f;
 	}
 
 
@@ -181,7 +186,7 @@ public class RoadGenerator : MonoBehaviour {
 		int prev = path.Count - 1;
 		int px = path[prev].GetTextureX(graphWidth, textureWidth, graphMargin);
 		int py = path[prev].GetTextureY(graphWidth, textureWidth, graphMargin);
-		int len = textures.GetLength(2) - 1;
+		int len = textures.GetLength(2);
 		for (int i = 0; i < path.Count; i++)
 		{
 			int tx = path[i].GetTextureX(graphWidth, textureWidth, graphMargin);
@@ -191,14 +196,14 @@ public class RoadGenerator : MonoBehaviour {
 				{
 					textures[x, y, j] = 0f;
 				}
-				textures[x, y, len] = 1f;
+				textures[x, y, roadTextureIndex] = 1f;
 			});
 			Drawing.DrawFatLine(tx, ty, px, py, roadWidth, (x, y, p) => {
 				for (int j = 0; j < len; j++)
 				{
 					textures[x, y, j] = 0f;
 				}
-				textures[x, y, len] = 1f;
+				textures[x, y, roadTextureIndex] = 1f;
 			});
 			prev = i;
 			px = tx;
@@ -335,14 +340,7 @@ public class RoadGenerator : MonoBehaviour {
 		int jumpDistance = 1;
 		LinkedList<PathFindNode> queue = new LinkedList<PathFindNode>();
 		start.distance = 0;
-		PathFindTryPath(start, nodes[x1 + jumpDistance, y1], target, queue);
-		PathFindTryPath(start, nodes[x1 - jumpDistance, y1], target, queue);
-		PathFindTryPath(start, nodes[x1, y1 - jumpDistance], target, queue);
-		PathFindTryPath(start, nodes[x1, y1 + jumpDistance], target, queue);
-		PathFindTryPath(start, nodes[x1 - jumpDistance, y1 - jumpDistance], target, queue);
-		PathFindTryPath(start, nodes[x1 - jumpDistance, y1 + jumpDistance], target, queue);
-		PathFindTryPath(start, nodes[x1 + jumpDistance, y1 - jumpDistance], target, queue);
-		PathFindTryPath(start, nodes[x1 + jumpDistance, y1 + jumpDistance], target, queue);
+		queue.AddFirst(start);
 		
 		while (queue.Count > 0)
 		{
@@ -360,25 +358,15 @@ public class RoadGenerator : MonoBehaviour {
 				}
 				return path;
 			}
-			int dx = current.x - current.prevNode.x;
-			int dy = current.y - current.prevNode.y;
-			if (dx > 0)
-				PathFindTryPath(current, nodes[current.x + jumpDistance, current.y], target, queue);
-			if (dx < 0)
-				PathFindTryPath(current, nodes[current.x - jumpDistance, current.y], target, queue);
-			if (dy > 0)
-				PathFindTryPath(current, nodes[current.x, current.y + jumpDistance], target, queue);
-			if (dy < 0)
-				PathFindTryPath(current, nodes[current.x, current.y - jumpDistance], target, queue);
-			if (dy >= 0 && dx >= 0)
-				PathFindTryPath(current, nodes[current.x + jumpDistance, current.y + jumpDistance], target, queue);
-			if (dy <= 0 && dx >= 0)
-				PathFindTryPath(current, nodes[current.x + jumpDistance, current.y - jumpDistance], target, queue);
-			if (dy >= 0 && dx <= 0)
-				PathFindTryPath(current, nodes[current.x - jumpDistance, current.y + jumpDistance], target, queue);
-			if (dy <= 0 && dx <= 0)
-				PathFindTryPath(current, nodes[current.x - jumpDistance, current.y - jumpDistance], target, queue);
-			if (queue.Count > nodes.Length / 4)
+			PathFindTryPath(current, nodes[current.x + jumpDistance, current.y], target, queue);
+			PathFindTryPath(current, nodes[current.x - jumpDistance, current.y], target, queue);
+			PathFindTryPath(current, nodes[current.x, current.y + jumpDistance], target, queue);
+			PathFindTryPath(current, nodes[current.x, current.y - jumpDistance], target, queue);
+			PathFindTryPath(current, nodes[current.x + jumpDistance, current.y + jumpDistance], target, queue);
+			PathFindTryPath(current, nodes[current.x + jumpDistance, current.y - jumpDistance], target, queue);
+			PathFindTryPath(current, nodes[current.x - jumpDistance, current.y + jumpDistance], target, queue);
+			PathFindTryPath(current, nodes[current.x - jumpDistance, current.y - jumpDistance], target, queue);
+			if (queue.Count > nodes.Length / 8)
 			{
 				return null;
 			}
