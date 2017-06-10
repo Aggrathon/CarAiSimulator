@@ -8,7 +8,7 @@ class Network():
     log_directory = os.path.join('data', 'logs')
     model_file_name = os.path.join(network_directory, 'model')
 
-    def __init__(self, image_width=256, image_height=128, additional_variables=2):
+    def __init__(self, image_width=200, image_height=60, additional_variables=2):
         self.image_width = image_width
         self.image_height = image_height
         self.additional_variables = additional_variables
@@ -25,19 +25,19 @@ class Network():
 
     def _create_model(self, x, y, l, training=True):
         image, variables = tf.split(x, [-1, self.additional_variables], 1)
-        prev_layer = tf.reshape(image ,[-1, 256, 128, 4])
+        prev_layer = tf.reshape(image ,[-1, self.image_width, self.image_height, 4])
         # Convolutional layers here
         prev_layer = tf.layers.batch_normalization(prev_layer, training=training)
         for i in [24, 32, 48]:
             prev_layer = tf.layers.conv2d(prev_layer, i, [5,5], [2,2], 'valid', activation=tf.nn.relu)
         prev_layer = tf.layers.batch_normalization(prev_layer, training=training)
-        prev_layer = tf.layers.conv2d(prev_layer, 64, [3,3], [1,1], 'valid', activation=tf.nn.relu)
+        prev_layer = tf.layers.conv2d(prev_layer, 64, [3,3], [2,2], 'valid', activation=tf.nn.relu)
         prev_layer = tf.layers.conv2d(prev_layer, 64, [3,3], [1,1], 'valid', activation=tf.nn.relu)
         # Combine variables
         prev_layer = tf.contrib.layers.flatten(prev_layer)
         prev_layer = tf.concat([prev_layer, variables], 1)
         # Fully connected layers here
-        for i in [4096, 512, 128, 16]:
+        for i in [2048, 512, 128, 16]:
             prev_layer = tf.layers.dense(prev_layer, i, tf.nn.relu)
             prev_layer = tf.layers.dropout(prev_layer, 0.4, training=training)
         self.output = tf.layers.dense(prev_layer, 2, activation=tf.nn.tanh)

@@ -47,7 +47,7 @@ def read_data(batch_size=256):
     features = tf.parse_single_example(
         serialized_example,
         features={
-            'input': tf.FixedLenFeature([256*128*4+2], tf.float32),
+            'input': tf.FixedLenFeature([200*60*4+2], tf.float32),
             'output': tf.FixedLenFeature([2], tf.float32)
         })
     return tf.train.shuffle_batch([features['input'], features['output']], batch_size, 8000, 1000)

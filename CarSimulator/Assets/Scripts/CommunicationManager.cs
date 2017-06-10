@@ -60,10 +60,11 @@ public class CommunicationManager : MonoBehaviour {
 				for (int j = 0; j < texture.height; j++)
 				{
 					Color32 c = texture.GetPixel(i, j);
-					buffer[i + texture.width * j] = c.r;
-					buffer[i + texture.width * j + imageSize] = c.g;
-					buffer[i + texture.width * j + imageSize + imageSize] = c.b;
-					buffer[i + texture.width * j + imageSize + imageSize + imageSize] = c.a;
+					int index = 4 * (i + texture.width * j);
+					buffer[index] = c.r;
+					buffer[index+1] = c.g;
+					buffer[index+2] = c.b;
+					buffer[index+3] = c.a;
 				}
 			}
 			requireTexture = false;

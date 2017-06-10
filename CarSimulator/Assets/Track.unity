@@ -537,17 +537,17 @@ MonoBehaviour:
   target: {fileID: 2029531043}
   horizontalDampening: 0.1
   directionDampening: 10
+  originalRotation: {x: 15, y: 0, z: 0}
 --- !u!4 &302073199
 Transform:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 302073197}
-  m_LocalRotation: {x: -0.09017849, y: 0.7167819, z: -0.094366364, w: -0.6849719}
+  m_LocalRotation: {x: 0.13052651, y: 0.00000008667486, z: -0.00000001141099, w: 0.9914448}
   m_LocalPosition: {x: 1, y: 203.36, z: 352.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 680253527}
   - {fileID: 646397383}
   m_Father: {fileID: 0}
   m_RootOrder: 5
@@ -724,7 +724,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 302073199}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!81 &646397384
 AudioListener:
@@ -799,7 +799,7 @@ GameObject:
   - component: {fileID: 680253528}
   - component: {fileID: 680253529}
   m_Layer: 8
-  m_Name: AI Cam
+  m_Name: Camera
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -811,13 +811,13 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 680253526}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0, y: 2, z: -4}
+  m_LocalRotation: {x: 0.08715578, y: 0.000000029802322, z: -0, w: 0.9961948}
+  m_LocalPosition: {x: 0, y: 2, z: 0.79999983}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 302073199}
+  m_Father: {fileID: 1401683645}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 10, y: 0, z: 0}
 --- !u!20 &680253528
 Camera:
   m_ObjectHideFlags: 0
@@ -834,15 +834,15 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 1
+  near clip plane: 0.5
   far clip plane: 500
-  field of view: 100
+  field of view: 80
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 4294967007
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 8400000, guid: 20fc137371cb95348aa78bed0dd71491, type: 2}
   m_TargetDisplay: 0
@@ -1864,6 +1864,51 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.Slider+SliderEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
+--- !u!1 &1401683643
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1401683645}
+  - component: {fileID: 1401683644}
+  m_Layer: 8
+  m_Name: CameraRigAI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1401683644
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1401683643}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3dc77630f1e7fbf4780240f5b7e3b9d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 2029531043}
+  horizontalDampening: 0
+  directionDampening: 30
+  originalRotation: {x: 0, y: 0, z: 0}
+--- !u!4 &1401683645
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1401683643}
+  m_LocalRotation: {x: 0, y: 0.00000008742278, z: 0, w: 1}
+  m_LocalPosition: {x: 1, y: 203.36, z: 352.2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 680253527}
+  m_Father: {fileID: 0}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1437918779
 GameObject:
   m_ObjectHideFlags: 0
@@ -5642,7 +5687,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4992016694825952, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0, type: 2}
       propertyPath: m_LocalRotation.y
-      value: -0.7229671
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4992016694825952, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0, type: 2}
       propertyPath: m_LocalRotation.z
@@ -5650,7 +5695,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4992016694825952, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0, type: 2}
       propertyPath: m_LocalRotation.w
-      value: 0.6908825
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4992016694825952, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0, type: 2}
       propertyPath: m_RootOrder
@@ -5670,7 +5715,7 @@ Prefab:
         type: 2}
     - target: {fileID: 4992016694825952, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0, type: 2}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: -92.6
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0, type: 2}

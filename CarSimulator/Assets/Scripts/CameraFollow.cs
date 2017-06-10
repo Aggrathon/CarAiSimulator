@@ -11,11 +11,12 @@ public class CameraFollow : MonoBehaviour {
 	[Range(1,40)]
 	public float directionDampening = 10f;
 
+	public Vector3 originalRotation;
 	Quaternion origRotation;
 
 	private void Start()
 	{
-		origRotation = transform.rotation;
+		origRotation = Quaternion.Euler(originalRotation);
 	}
 
 	void Update () {
