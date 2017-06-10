@@ -31,7 +31,6 @@ class Network():
         for i in [24, 32, 48]:
             prev_layer = tf.layers.conv2d(prev_layer, i, [5,5], [2,2], 'valid', activation=tf.nn.relu)
         prev_layer = tf.layers.batch_normalization(prev_layer, training=training)
-        prev_layer = tf.layers.conv2d(prev_layer, 64, [3,3], [2,2], 'valid', activation=tf.nn.relu)
         prev_layer = tf.layers.conv2d(prev_layer, 64, [3,3], [1,1], 'valid', activation=tf.nn.relu)
         # Combine variables
         prev_layer = tf.contrib.layers.flatten(prev_layer)
@@ -79,8 +78,7 @@ class Network():
             print("Training step: %i, loss: %.3f (%.2f s)"%(step, loss, timer()-pre))
         return step, loss
     
-    def train(self, batch_fn, iterations=1000, summary_interval=10):
-        x, y = batch_fn()
+    def train(self, x, y, iterations=1000, summary_interval=10):
         self._create_model(x, y, None, True)
         summary_ops = tf.summary.merge_all()
         session, saver = self.get_session()
@@ -106,9 +104,22 @@ class Network():
         session, _ = self.get_session()
         try:
             while True:
-                out = session.run([self.output], feed_dict={x: input_fn()})
-                output_fn(out[0][0])
+                out = session.run(self.output, feed_dict={x: input_fn()})
+                output_fn(out[0])
         except (KeyboardInterrupt, StopIteration):
             pass
         finally:
             session.close()
+    
+    def predict_tensor(self, x, output_fn):
+        self._create_model(x, None, None, False)
+        session, _ = self.get_session()
+        try:
+            while True:
+                out = session.run(self.output)
+                output_fn(out[0])
+        except (KeyboardInterrupt, StopIteration):
+            pass
+        finally:
+            session.close()
+

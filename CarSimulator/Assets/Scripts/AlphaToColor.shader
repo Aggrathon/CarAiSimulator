@@ -1,7 +1,4 @@
-﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-
-Shader "CameraAI/AlphaToColor" {
+﻿Shader "CameraAI/AlphaToColor" {
 	Properties{
 		_MainTex("Base (RGB)", 2D) = "white" {}
 	}

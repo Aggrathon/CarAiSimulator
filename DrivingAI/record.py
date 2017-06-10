@@ -38,7 +38,7 @@ def write_data(data_queue, id):
             data_queue.task_done()
 
 
-def read_data(batch_size=256):
+def read_data(batch_size=256, shuffle=True):
     reader = tf.TFRecordReader()
     files = [os.path.join(DATA_DIRECTORY, f) for f in os.listdir(DATA_DIRECTORY) if '.tfrecord' in f]
     random.shuffle(files)
@@ -50,7 +50,10 @@ def read_data(batch_size=256):
             'input': tf.FixedLenFeature([200*60*4+2], tf.float32),
             'output': tf.FixedLenFeature([2], tf.float32)
         })
-    return tf.train.shuffle_batch([features['input'], features['output']], batch_size, 8000, 1000)
+    if shuffle:
+        return tf.train.shuffle_batch([features['input'], features['output']], batch_size, 8000, 1000)
+    else:
+        return tf.train.batch([features['input'], features['output']], batch_size, capacity=2000)
 
 
 if __name__ == "__main__":

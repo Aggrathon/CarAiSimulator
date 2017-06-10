@@ -100,9 +100,9 @@ public class CommunicationManager : MonoBehaviour {
 					car.userInput = false;
 					while (true)
 					{
-						socket.Send(buffer, FillStatusBuffer(), SocketFlags.None);
-						int amount = socket.Receive(buffer);
-						if (amount < 2)
+						if (socket.Send(buffer, FillStatusBuffer(), SocketFlags.None) == 0)
+							break;
+						if (socket.Receive(buffer) < 2)
 							break;
 						car.horizontalSteering = ((float)buffer[0]) / 127.5f - 1f;
 						car.verticalSteering = ((float)buffer[1]) / 127.5f - 1f;
@@ -136,7 +136,7 @@ public class CommunicationManager : MonoBehaviour {
 		requireTexture = true;
 		while (requireTexture) ;
 		buffer[imageSize*4 + 0] = (byte)((track.directionAngle / 180f + 1) * 127.5f);
-		buffer[imageSize*4 + 1] = (byte)(speedometer.speed*2 + 100);
+		buffer[imageSize*4 + 1] = (byte)(speedometer.speed*3+100);
 		buffer[imageSize*4 + 2] = (byte)(car.horizontalSteering * 127.5f + 127.5f);
 		buffer[imageSize*4 + 3] = (byte)(car.verticalSteering * 127.5f + 127.5f);
 		return imageSize*4 + 4;
