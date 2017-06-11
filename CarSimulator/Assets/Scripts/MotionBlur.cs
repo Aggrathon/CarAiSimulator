@@ -17,7 +17,7 @@ public class MotionBlur : MonoBehaviour {
 	private void OnRenderImage(RenderTexture source, RenderTexture destination)
 	{
 		float blur = Mathf.Abs(speedometer.speed * 3.6f / 150);
-		effect.SetFloat(blurID, blur*blur);
+		effect.SetFloat(blurID, (blur*blur+blur)*0.5f);
 		Graphics.Blit(source, destination, effect);
 	}
 

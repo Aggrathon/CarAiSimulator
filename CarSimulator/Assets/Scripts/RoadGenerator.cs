@@ -67,43 +67,30 @@ public class RoadGenerator : MonoBehaviour {
 							nodes[i, j] = new PathFindNode(i, j, nodeHeight);
 					}
 				}
-				int x2, y2, number = 0;
-				int x1 = rnd.Next(1, pathFindingGraphSize-1);
-				int y1 = rnd.Next(1, pathFindingGraphSize - 1);
+				PathFindNode start = GetNextNode(null, path, rnd, nodes, false);
+				PathFindNode target = null;
 				for (int i = 0; i < numCheckpoints; i++)
 				{
 					if (i == numCheckpoints - 1)
 					{
-						x2 = path[0].x;
-						y2 = path[0].y;
+						target = path[0];
 					}
 					else
 					{
-						x2 = rnd.Next(1, pathFindingGraphSize - 1);
-						y2 = rnd.Next(1, pathFindingGraphSize - 1);
-						if(i%3 != 0)
-							while((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1) > pathFindingGraphSize*pathFindingGraphSize/16)
-							{
-								x2 = rnd.Next(1, pathFindingGraphSize - 1);
-								y2 = rnd.Next(1, pathFindingGraphSize - 1);
-							}
+						target = GetNextNode(start, path, rnd, nodes, i%2==0);
 					}
-					LinkedList<PathFindNode> p = PathFind(x1, y1, x2, y2, nodes);
+					LinkedList<PathFindNode> p = PathFind(start, target, nodes);
 					if (p == null)
 					{
 						if (i == 0)
 						{
-							x1 = x2;
-							y1 = y2;
+							start = target;
 						}
 						i--;
-						number++;
 						continue;
 					}
-					x1 = x2;
-					y1 = y2;
+					start = target;
 					AddRoadSegment(path, p);
-					number++;
 				}
 				//Create roads
 				status = "Painting roads";
@@ -297,12 +284,17 @@ public class RoadGenerator : MonoBehaviour {
 		}
 		foreach (var node in segment)
 		{
-			if (node == roads[roads.Count - 1])
+			if (node.SqrDistance(roads[roads.Count - 1]) <= 4)
 				continue;
+			if (node.SqrDistance(roads[roads.Count - 2]) <= 4)
+			{
+				roads.RemoveAt(roads.Count - 1);
+				continue;
+			}
 			bool cont = true;
 			for (int i = 0; i < roads.Count; i++)
 			{
-				if (node.SqrDistance(roads[i]) < 10)
+				if (node.SqrDistance(roads[i]) <= 9)
 				{
 					cont = false;
 					roads.Add(roads[i]);
@@ -325,13 +317,42 @@ public class RoadGenerator : MonoBehaviour {
 		}
 	}
 
-	private LinkedList<PathFindNode> PathFind(int x1, int y1, int x2, int y2, PathFindNode[,] nodes)
+	private PathFindNode GetNextNode(PathFindNode prev, List<PathFindNode> path, System.Random rnd, PathFindNode[,] nodes, bool close=false)
+	{
+		PathFindNode node = null;
+		if (prev == null)
+		{
+			while (node == null)
+				node = nodes[rnd.Next(1, nodes.GetLength(0) - 1), rnd.Next(1, nodes.GetLength(0) - 1)];
+			return node;
+		}
+		bool prev10 = true;
+		do
+		{
+			node = nodes[rnd.Next(1, nodes.GetLength(0) - 1), rnd.Next(1, nodes.GetLength(0) - 1)];
+			if(node == null)
+				continue;
+
+			if (close && node.SqrDistance(prev) > nodes.Length / 16)
+				continue;
+
+			prev10 = false;
+			for (int pn = Mathf.Max(0, path.Count - 10); pn < path.Count; pn++)
+				if (node.SqrDistance(path[pn]) <= 9)
+				{
+					prev10 = true;
+					break;
+				}
+		}
+		while (prev10);
+		return node;
+	}
+
+	private LinkedList<PathFindNode> PathFind(PathFindNode start, PathFindNode target, PathFindNode[,] nodes)
 	{
 		int width = nodes.GetLength(0);
 		int height = nodes.GetLength(1);
-		PathFindNode target = nodes[x2, y2];
-		PathFindNode start = nodes[x1, y1];
-		if (!Utils.InMargin(x1, y1, width, height, 1) || !Utils.InMargin(x2, y2, width, height, 1) || target == null || start == null)
+		if (!Utils.InMargin(start.x, start.y, width, height, 1) || !Utils.InMargin(target.x, target.y, width, height, 1) || target == null || start == null)
 			return null;
 		for (int i = 0; i < width; i++)
 			for (int j = 0; j < height; j++)
@@ -350,6 +371,7 @@ public class RoadGenerator : MonoBehaviour {
 			current.visited = true;
 			if (current == target)
 			{
+				target = target.prevNode;
 				LinkedList<PathFindNode> path = new LinkedList<PathFindNode>();
 				while (target != null)
 				{

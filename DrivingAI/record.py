@@ -30,6 +30,7 @@ def write_data(data_queue, id):
     with tf.python_io.TFRecordWriter(os.path.join(DATA_DIRECTORY,"training_%s_%i.tfrecords"%(timestamp, id))) as writer:
         while True:
             data_in, data_out = Recorder.bytes_to_tensor(data_queue.get())
+            print(len(data_in))
             record = tf.train.Example(features=tf.train.Features(feature={
                 'input': tf.train.Feature(float_list=tf.train.FloatList(value=data_in)),
                 'output': tf.train.Feature(float_list=tf.train.FloatList(value=data_out))
@@ -38,7 +39,7 @@ def write_data(data_queue, id):
             data_queue.task_done()
 
 
-def read_data(batch_size=256, shuffle=True):
+def read_data(batch_size=512, shuffle=True):
     reader = tf.TFRecordReader()
     files = [os.path.join(DATA_DIRECTORY, f) for f in os.listdir(DATA_DIRECTORY) if '.tfrecord' in f]
     random.shuffle(files)
@@ -64,5 +65,6 @@ if __name__ == "__main__":
         t.daemon = True
         t.start()
     record_data(q)
-    print("Processing leftover snapshots (%i)"%q.qsize())
+    if q.qsize() > 0:
+        print("Processing leftover snapshots (%i)"%q.qsize())
     q.join()

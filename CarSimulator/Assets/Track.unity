@@ -5855,7 +5855,7 @@ MonoBehaviour:
   water: {fileID: 1590125273}
   reflection: {fileID: 505524547}
   heightPenalty: 500
-  numCheckpoints: 24
+  numCheckpoints: 18
   roadWidth: 4
   pathFindingSpacing: 15
   roadTextureIndex: 4

@@ -42,10 +42,10 @@ class Recorder(Communicator):
     @classmethod
     def bytes_to_tensor(cls, data):
         indata = [float(i)/.255 for i in data[:-4]]
-        indata.append((float(data[-3])-100)*0.5) #speed
         indata.append(float(data[-4])/127.5*180-180) #direction
-        out = [float(data[-2])/127.5-1, float(data[-1])/127.5-1]
-        return indata, out
+        indata.append((float(data[-3])-100)/3) #speed
+        outdata = [float(data[-2])/127.5-1, float(data[-1])/127.5-1]
+        return indata, outdata
         
     def get_status(self):
         data = self.recieve()
@@ -66,8 +66,9 @@ class Driver(Recorder):
     mode = SIMULATOR_DRIVE
 
     def set_action(self, h, v):
-        print("Driving  |  h: %.2f  v: %.2f"%(h,v))
-        self.send(bytes([int((h+1)*127.5), int((v+1)*127.5)]))
+        data = bytes([int((h+1)*127.5), int((v+1)*127.5)])
+        print("Driving  |  h: %.2f  v: %.2f  | "%(h,v), data)
+        self.send(data)
 
 
 

@@ -69,7 +69,7 @@ public class TerrainGenerator : MonoBehaviour
 				}
 			}
 			float meanHeight = sumHeight / (size * size);
-			float sandHeight = waterHeight+0.04f;
+			float sandHeight = waterHeight+0.02f;
 			float mountainHeight = (meanHeight*1.5f+0.9f)*0.5f;
 			for (int i = 0; i < textureSize; i++)
 			{
@@ -77,7 +77,8 @@ public class TerrainGenerator : MonoBehaviour
 				{
 					int x = (int)((float)i / (float)textureSize * size);
 					int y = (int)((float)j / (float)textureSize * size);
-					textures[i, j, 3] = Mathf.Clamp01(1 - Mathf.Abs((heights[x, y] - sandHeight) * 16));
+					textures[i, j, 3] = Mathf.Clamp01(1 - Mathf.Abs((heights[x, y] - sandHeight) * 4));
+					textures[i, j, 3] = textures[i, j, 3] * textures[i, j, 3];
 					textures[i, j, 2] = Mathf.Clamp01(Mathf.Pow((heights[x, y] - mountainHeight) * 8, 3));
 					textures[i, j, 4] = 0;
 					textures[i, j, 1] = 0;

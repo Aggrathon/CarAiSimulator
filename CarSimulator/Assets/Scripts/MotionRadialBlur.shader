@@ -52,19 +52,23 @@
 
 				float scale = _ScreenParams.w - 0.5;
 				half4 blur = (color + color
+					+ tex2D(_MainTex, i.uv + dir * (-0.1) * _BlurWidth * scale)
 					+ tex2D(_MainTex, i.uv + dir * (-0.08) * _BlurWidth * scale)
 					+ tex2D(_MainTex, i.uv + dir * (-0.06) * _BlurWidth * scale)
 					+ tex2D(_MainTex, i.uv + dir * (-0.04) * _BlurWidth * scale)
 					+ tex2D(_MainTex, i.uv + dir * (-0.03) * _BlurWidth * scale)
 					+ tex2D(_MainTex, i.uv + dir * (-0.02) * _BlurWidth * scale)
 					+ tex2D(_MainTex, i.uv + dir * (-0.01) * _BlurWidth * scale)
+					+ tex2D(_MainTex, i.uv + dir * (-0.005) * _BlurWidth * scale)
+					+ tex2D(_MainTex, i.uv + dir * (0.005) * _BlurWidth  * scale)
 					+ tex2D(_MainTex, i.uv + dir * (0.01) * _BlurWidth  * scale)
 					+ tex2D(_MainTex, i.uv + dir * (0.02) * _BlurWidth  * scale)
 					+ tex2D(_MainTex, i.uv + dir * (0.03) * _BlurWidth  * scale)
 					+ tex2D(_MainTex, i.uv + dir * (0.04) * _BlurWidth  * scale)
 					+ tex2D(_MainTex, i.uv + dir * (0.06) * _BlurWidth  * scale)
 					+ tex2D(_MainTex, i.uv + dir * (0.08) * _BlurWidth  * scale)
-					) / 14.0;
+					+ tex2D(_MainTex, i.uv + dir * (0.1) * _BlurWidth  * scale)
+					) / 18.0;
 
 				half t = dist * _BlurStrength * _ScreenParams.w;
 				t = clamp(t, 0.0, 1.0);

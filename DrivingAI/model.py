@@ -42,8 +42,8 @@ class Network():
         self.output = tf.layers.dense(prev_layer, 2, activation=tf.nn.tanh)
         # Trainers and losses here
         if y is not None:
-            self.loss = tf.losses.mean_squared_error(y, self.output)
-            adam = tf.train.AdamOptimizer(1e-5)
+            self.loss = tf.losses.absolute_difference(y, self.output, 10.0)
+            adam = tf.train.AdamOptimizer(1e-5, 0.85)
             self.trainer = adam.minimize(self.loss, self.global_step)
             tf.summary.scalar('loss', self.loss)
             h, v = tf.split(self.output, [1,1], 1)
@@ -61,8 +61,11 @@ class Network():
         tf.train.start_queue_runners(session)
         try:
             ckpt = tf.train.get_checkpoint_state(self.network_directory)
-            saver.restore(session, ckpt.model_checkpoint_path)
-            print("\nLoaded an existing network\n")
+            if ckpt is None:
+                print("\nCreated a new network\n")
+            else:
+                saver.restore(session, ckpt.model_checkpoint_path)
+                print("\nLoaded an existing network\n")
         except Exception as e:
             print("\nCreated a new network (%s)\n"%repr(e))
         return session, saver
