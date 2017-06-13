@@ -5,6 +5,7 @@ PORT = 38698
 BUFFER_SIZE = 1 << 18
 SIMULATOR_RECORD = 30
 SIMULATOR_DRIVE = 31
+HEARTBEAT = bytes([1])
 
 class Communicator():
 
@@ -41,7 +42,7 @@ class Recorder(Communicator):
     
     @classmethod
     def bytes_to_tensor(cls, data):
-        indata = [float(i)/.255 for i in data[:-4]]
+        indata = [float(i)/255.0 for i in data[:-4]]
         indata.append(float(data[-4])/127.5*180-180) #direction
         indata.append((float(data[-3])-100)/3) #speed
         outdata = [float(data[-2])/127.5-1, float(data[-1])/127.5-1]
@@ -54,11 +55,13 @@ class Recorder(Communicator):
             return None
         return Recorder.bytes_to_tensor(data)
     
-    def get_status_bytes(self):
+    def get_status_bytes(self, heartbeat=True):
         data = self.recieve()
         if data is None or len(data) == 0:
             raise StopIteration
             return None
+        if heartbeat:
+            self.send(HEARTBEAT)
         return data
 
 
@@ -67,7 +70,7 @@ class Driver(Recorder):
 
     def set_action(self, h, v):
         data = bytes([int((h+1)*127.5), int((v+1)*127.5)])
-        print("Driving  |  h: %.2f  v: %.2f  | "%(h,v), data)
+        print("Driving  |  h: %.2f  v: %.2f"%(h,v))
         self.send(data)
 
 

@@ -92,7 +92,10 @@ public class CommunicationManager : MonoBehaviour {
 					while (car.verticalSteering == 0f) ;
 					while (true)
 					{
-						if (socket.Send(buffer, FillStatusBuffer(), SocketFlags.None) == 0)
+						FillStatusBuffer();
+						if (socket.Send(buffer, imageSize * 4 + 4, SocketFlags.None) == 0)
+							break;
+						if (socket.Receive(buffer) == 0)
 							break;
 					}
 					break;
@@ -100,7 +103,8 @@ public class CommunicationManager : MonoBehaviour {
 					car.userInput = false;
 					while (true)
 					{
-						if (socket.Send(buffer, FillStatusBuffer(), SocketFlags.None) == 0)
+						FillStatusBuffer();
+						if (socket.Send(buffer, imageSize * 4 + 4, SocketFlags.None) == 0)
 							break;
 						if (socket.Receive(buffer) < 2)
 							break;
@@ -131,7 +135,7 @@ public class CommunicationManager : MonoBehaviour {
 		}
 	}
 
-	int FillStatusBuffer()
+	void FillStatusBuffer()
 	{
 		requireTexture = true;
 		while (requireTexture) ;
@@ -139,7 +143,6 @@ public class CommunicationManager : MonoBehaviour {
 		buffer[imageSize*4 + 1] = (byte)(speedometer.speed*3+100);
 		buffer[imageSize*4 + 2] = (byte)(car.horizontalSteering * 127.5f + 127.5f);
 		buffer[imageSize*4 + 3] = (byte)(car.verticalSteering * 127.5f + 127.5f);
-		return imageSize*4 + 4;
 	}
 
 }

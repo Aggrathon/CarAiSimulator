@@ -36,12 +36,12 @@ public class CarSteering : MonoBehaviour
 		{
 			horizontalSteering = Input.GetAxis("Horizontal");
 			verticalSteering = Input.GetAxis("Vertical");
-			handbrake = Input.GetAxis("Jump");
+			verticalSteering -= Input.GetAxis("Jump");
 		}
 	}
 
 	private void FixedUpdate()
     {
-        car.Move(horizontalSteering, verticalSteering, verticalSteering, handbrake);
+        car.Move(horizontalSteering, verticalSteering, verticalSteering, 0f);
     }
 }

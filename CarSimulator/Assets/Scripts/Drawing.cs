@@ -74,12 +74,12 @@ public static class Drawing
 		}
 	}
 
-	public static void DrawFatLine(int x1, int y1, int x2, int y2, int width, Action<int, int, float> onPoint, bool shortEnd=false)
+	public static void DrawFatLine(int x1, int y1, int x2, int y2, int width, Action<int, int, float, float> onPoint, bool shortEnd=false)
 	{
 		Vector2 along = new Vector2(x2 - x1, y2 - y1).normalized;
 		if (shortEnd)
 		{
-			Vector2 end = along * (width *3 / 4);
+			Vector2 end = along * (width * 0.8f);
 			x1 += (int)Mathf.Round(end.x);
 			x2 -= (int)Mathf.Round(end.x);
 			y1 += (int)Mathf.Round(end.y);
@@ -88,22 +88,23 @@ public static class Drawing
 		along *= width;
 		int dx = -(int)Mathf.Round(along.y);
 		int dy = (int)Mathf.Round(along.x);
-		int z2 = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)+width/4;
 		if (Mathf.Abs(Mathf.Abs(dx)-Mathf.Abs(dy)) < width)
 		{
 			DrawLine(x1, y1, x2, y2, (x, y, p) => {
 				DrawLine(x+dx, y+dy, x-dx, y-dy, (rx, ry, rp) => {
-					int ax = rx - x1, ay = ry - y1;
-					int bx = x2 - rx, by = y2 - ry;
-					onPoint(rx + 1, ry + 1, Utils.GetWideLineProgress(z2, ax + 1, ay + 1, bx + 1, by - 1));
-					onPoint(rx + 1, ry, Utils.GetWideLineProgress(z2, ax + 1, ay, bx + 1, by));
-					onPoint(rx + 1, ry - 1, Utils.GetWideLineProgress(z2, ax + 1, ay - 1, bx + 1, by + 1));
-					onPoint(rx, ry + 1, Utils.GetWideLineProgress(z2, ax, ay + 1, bx, by - 1));
-					onPoint(rx, ry, p);
-					onPoint(rx, ry - 1, Utils.GetWideLineProgress(z2, ax, ay - 1, bx, by + 1));
-					onPoint(rx - 1, ry + 1, Utils.GetWideLineProgress(z2, ax - 1, ay + 1, bx - 1, by - 1));
-					onPoint(rx - 1, ry, Utils.GetWideLineProgress(z2, ax - 1, ay, bx - 1, by));
-					onPoint(rx - 1, ry - 1, Utils.GetWideLineProgress(z2, ax - 1, ay - 1, bx - 1, by + 1));
+					rp = Mathf.Abs(rp - 0.5f);
+					rp = 1 - rp * rp * 3;
+					float pa = p * rp;
+					float pb = (1-p) * rp;
+					onPoint(rx + 1, ry + 1, pa, pb);
+					onPoint(rx + 1, ry, pa, pb);
+					onPoint(rx + 1, ry - 1, pa, pb);
+					onPoint(rx, ry + 1, pa, pb);
+					onPoint(rx, ry, pa, pb);
+					onPoint(rx, ry - 1, pa, pb);
+					onPoint(rx - 1, ry + 1, pa, pb);
+					onPoint(rx - 1, ry, pa, pb);
+					onPoint(rx - 1, ry - 1, pa, pb);
 				});
 			});
 		}
@@ -111,60 +112,9 @@ public static class Drawing
 		{
 			DrawLine(x1, y1, x2, y2, (x, y, p) => {
 				DrawLine(x + dx, y + dy, x - dx, y - dy, (rx, ry, rp) => {
-					onPoint(rx, ry, p);
+					onPoint(rx, ry, p, 1-p);
 				});
 			});
-		}
-	}
-
-	public static void DrawFatLine2(int x1, int y1, int x2, int y2, int width, Action<int, int, float> onPoint)
-	{
-		Vector2 perp = new Vector2(x2 - x1, y2 - y1).normalized * width;
-		int dx = -(int)Mathf.Round(perp.y);
-		int dy = (int)Mathf.Round(perp.x);
-
-		float z2 = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
-		DrawPolygon((x, y) => {
-			int ax = x - x1;
-			int ay = y - y1;
-			int bx = x - x2;
-			int by = y - y2;
-			float a2 = ax * ax + ay * ay;
-			float b2 = bx * bx + by * by;
-			onPoint(x, y, ((a2 - b2) / z2 + 1) / 2);
-		},
-		new Pixel(x1 + dx, y1 + dy),
-		new Pixel(x1 - dx, y1 - dy),
-		new Pixel(x2 + dx, y2 + dy),
-		new Pixel(x2 - dx, y2 - dy)
-		);
-	}
-
-	public static void DrawFatLine3(int x0, int y0, int x1, int y1, int width, Action<int, int, float> onPoint)
-	{
-		int dx = Mathf.Abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-		int dy = Mathf.Abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-		int err = dx - dy, e2, x2, y2;                          /* error value e_xy */
-		float ed = dx + dy == 0 ? 1 : Mathf.Sqrt((float)dx * dx + (float)dy * dy);
-		
-		for (width = (width+1) / 2; ;)
-		{                                   /* pixel loop */
-			onPoint(x0, y0, 1);
-			e2 = err; x2 = x0;
-			if (2 * e2 >= -dx)
-			{                                           /* x step */
-				for (e2 += dy, y2 = y0; e2 < ed * width && (y1 != y2 || dx > dy); e2 += dx)
-					onPoint(x0, y2 += sy, 1);
-				if (x0 == x1) break;
-				e2 = err; err -= dy; x0 += sx;
-			}
-			if (2 * e2 <= dy)
-			{                                            /* y step */
-				for (e2 = dx - e2; e2 < ed * width && (x1 != x2 || dx < dy); e2 += dy)
-					onPoint(x2 += sx, y0, 1);
-				if (y0 == y1) break;
-				err += dx; y0 += sy;
-			}
 		}
 	}
 

@@ -42,8 +42,8 @@ class Network():
         self.output = tf.layers.dense(prev_layer, 2, activation=tf.nn.tanh)
         # Trainers and losses here
         if y is not None:
-            self.loss = tf.losses.absolute_difference(y, self.output, 10.0)
-            adam = tf.train.AdamOptimizer(1e-5, 0.85)
+            self.loss = tf.losses.absolute_difference(self.output, y)
+            adam = tf.train.AdamOptimizer(1e-5, 0.92)
             self.trainer = adam.minimize(self.loss, self.global_step)
             tf.summary.scalar('loss', self.loss)
             h, v = tf.split(self.output, [1,1], 1)
