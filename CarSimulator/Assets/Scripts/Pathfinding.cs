@@ -118,17 +118,25 @@ public class Pathfinding
 
 	private void AddRoadSegment(List<PathFindNode> road, LinkedList<PathFindNode> segment)
 	{
-		while (road.Count < 2)
-		{
-			road.Add(segment.First.Value);
-			segment.RemoveFirst();
-		}
 		foreach (var node in segment)
 		{
-			if (node.SqrDistance(road[road.Count - 1]) <= 4)
+			if (road.Count < 2)
+			{
+				road.Add(node);
 				continue;
+			}
+
+			if (node.SqrDistance(road[road.Count - 1]) <= 9)
+			{
+				continue;
+			}
+			if (node.SqrDistance(road[road.Count-2]) <= 9)
+			{
+				road.RemoveAt(road.Count - 1);
+				continue;
+			}
 			bool cont = true;
-			for (int i = 0; i < road.Count; i++)
+			for (int i = 0; i < road.Count-2; i++)
 			{
 				if (node.SqrDistance(road[i]) <= 9)
 				{

@@ -5,7 +5,7 @@ from record import read_data
 def main():
     tf.logging.set_verbosity(tf.logging.INFO)
     nn = Network()
-    nn.train(*read_data(), 30000)
+    nn.train(*read_data(), 50000)
 
 
 if __name__ == "__main__":

@@ -38,7 +38,7 @@ def write_data(data_queue, id):
             data_queue.task_done()
 
 
-def read_data(batch_size=384, shuffle=True):
+def read_data(batch_size=64, shuffle=True):
     reader = tf.TFRecordReader()
     files = [os.path.join(DATA_DIRECTORY, f) for f in os.listdir(DATA_DIRECTORY) if '.tfrecord' in f]
     random.shuffle(files)

@@ -37,21 +37,29 @@ class Network():
         prev_layer = tf.concat([prev_layer, variables], 1)
         # Fully connected layers here
         for i in [2048, 512, 128, 16]:
-            prev_layer = tf.layers.dense(prev_layer, i, tf.nn.relu)
-            prev_layer = tf.layers.dropout(prev_layer, 0.4, training=training)
-        self.output = tf.layers.dense(prev_layer, 2, activation=tf.nn.tanh)
+            prev_layer = tf.layers.dense(
+                prev_layer, i, tf.nn.relu, 
+                use_bias=True, kernel_regularizer=tf.contrib.layers.l2_regularizer(0.0001))
+            prev_layer = tf.layers.dropout(prev_layer, 0.3, training=training)
+        self.output = tf.layers.dense(prev_layer, 2, activation=tf.nn.tanh, 
+            use_bias=True, kernel_regularizer=tf.contrib.layers.l2_regularizer(0.0001))
         # Trainers and losses here
         if y is not None:
-            self.loss = tf.losses.absolute_difference(self.output, y)
-            adam = tf.train.AdamOptimizer(1e-5, 0.92)
+            self.loss = tf.losses.mean_squared_error(self.output, y) + tf.losses.get_regularization_loss()
+            adam = tf.train.AdamOptimizer(1e-5, 0.85)
             self.trainer = adam.minimize(self.loss, self.global_step)
             tf.summary.scalar('loss', self.loss)
             h, v = tf.split(self.output, [1,1], 1)
             tf.summary.histogram('horizontal', h)
             tf.summary.histogram('vertical', v)
-        else:
-            #TODO self learning by driving?
-            pass
+        elif l is not None:
+            self.loss = tf.losses.add_loss(l) + tf.losses.get_regularization_loss()
+            adam = tf.train.AdamOptimizer(1e-5)
+            self.trainer = adam.minimize(self.loss, self.global_step)
+            tf.summary.scalar('reinforcement loss', self.loss)
+            h, v = tf.split(self.output, [1,1], 1)
+            tf.summary.histogram('horizontal', h)
+            tf.summary.histogram('vertical', v)
 
 
     def get_session(self):
