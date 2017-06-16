@@ -42,11 +42,13 @@ class Recorder(Communicator):
     
     @classmethod
     def bytes_to_tensor(cls, data):
-        indata = [float(i)/255.0 for i in data[:-4]]
-        indata.append(float(data[-4])/127.5*180-180) #direction
-        indata.append((float(data[-3])-100)/3) #speed
+        image = [float(i)/255.0 for i in data[:-5]]
+        variables = [
+            float(data[-5])/127.5 - 1.0, float(data[-4])/127.5 - 1.0, #direction
+            (float(data[-3])-100)/3 #speed
+        ]
         outdata = [float(data[-2])/127.5-1, float(data[-1])/127.5-1]
-        return indata, outdata
+        return image, variables, outdata
         
     def get_status(self):
         data = self.recieve()
@@ -63,7 +65,7 @@ class Recorder(Communicator):
         if heartbeat:
             self.send(HEARTBEAT)
         return data
-
+        
 
 class Driver(Recorder):
     mode = SIMULATOR_DRIVE
@@ -72,7 +74,6 @@ class Driver(Recorder):
         data = bytes([int((h+1)*127.5), int((v+1)*127.5)])
         print("Driving  |  h: %.2f  v: %.2f"%(h,v))
         self.send(data)
-
 
 
 if __name__ == "__main__":

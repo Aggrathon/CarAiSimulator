@@ -29,16 +29,17 @@ def write_data(data_queue, id):
     timestamp = '{:%Y%m%d%H%M%S}'.format(datetime.datetime.now())
     with tf.python_io.TFRecordWriter(os.path.join(DATA_DIRECTORY,"training_%s_%i.tfrecords"%(timestamp, id))) as writer:
         while True:
-            data_in, data_out = Recorder.bytes_to_tensor(data_queue.get())
+            data_img, data_var, data_out = Recorder.bytes_to_tensor(data_queue.get())
             record = tf.train.Example(features=tf.train.Features(feature={
-                'input': tf.train.Feature(float_list=tf.train.FloatList(value=data_in)),
-                'output': tf.train.Feature(float_list=tf.train.FloatList(value=data_out))
+                'image': tf.train.Feature(float_list=tf.train.FloatList(value=data_img)),
+                'variables': tf.train.Feature(float_list=tf.train.FloatList(value=data_var)),
+                'steering': tf.train.Feature(float_list=tf.train.FloatList(value=data_out))
             }))
             writer.write(record.SerializeToString())
             data_queue.task_done()
 
 
-def read_data(batch_size=64, shuffle=True):
+def read_data(image_width=200, image_height=60, image_depth=4, variable_count=3):
     reader = tf.TFRecordReader()
     files = [os.path.join(DATA_DIRECTORY, f) for f in os.listdir(DATA_DIRECTORY) if '.tfrecord' in f]
     random.shuffle(files)
@@ -47,13 +48,11 @@ def read_data(batch_size=64, shuffle=True):
     features = tf.parse_single_example(
         serialized_example,
         features={
-            'input': tf.FixedLenFeature([200*60*4+2], tf.float32),
-            'output': tf.FixedLenFeature([2], tf.float32)
+            'image': tf.FixedLenFeature([image_width*image_height*image_depth], tf.float32),
+            'variables': tf.FixedLenFeature([variable_count], tf.float32),
+            'steering': tf.FixedLenFeature([2], tf.float32)
         })
-    if shuffle:
-        return tf.train.shuffle_batch([features['input'], features['output']], batch_size, 8000, 1000)
-    else:
-        return tf.train.batch([features['input'], features['output']], batch_size, capacity=2000)
+    return tf.reshape(features['image'], [image_width, image_height, image_depth]), features['variables'], features['steering']
 
 
 if __name__ == "__main__":

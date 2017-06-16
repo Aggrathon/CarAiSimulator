@@ -1,6 +1,7 @@
 import tensorflow as tf
 from timeit import default_timer as timer
 import os
+from data import get_lane_shuffle_batch, get_middle_lane
 
 
 class Network():
@@ -8,10 +9,7 @@ class Network():
     log_directory = os.path.join('data', 'logs')
     model_file_name = os.path.join(network_directory, 'model')
 
-    def __init__(self, image_width=200, image_height=60, additional_variables=2):
-        self.image_width = image_width
-        self.image_height = image_height
-        self.additional_variables = additional_variables
+    def __init__(self):
         self.global_step = tf.Variable(0, name='global_step')
         self.output = None
         self.loss = None
@@ -19,13 +17,8 @@ class Network():
         os.makedirs(self.log_directory, exist_ok=True)
         os.makedirs(self.network_directory, exist_ok=True)
 
-
-    def _get_x_placeholder(self):
-        return tf.placeholder(tf.float32, [None, self.image_width*self.image_height*4+self.additional_variables])
-
-    def _create_model(self, x, y, l, training=True):
-        image, variables = tf.split(x, [-1, self.additional_variables], 1)
-        prev_layer = tf.reshape(image ,[-1, self.image_width, self.image_height, 4])
+    def _create_model(self, x, v, y, l, training=True):
+        prev_layer = x
         # Convolutional layers here
         prev_layer = tf.layers.batch_normalization(prev_layer, training=training)
         for i in [24, 32, 48]:
@@ -34,7 +27,7 @@ class Network():
         prev_layer = tf.layers.conv2d(prev_layer, 64, [3,3], [1,1], 'valid', activation=tf.nn.relu)
         # Combine variables
         prev_layer = tf.contrib.layers.flatten(prev_layer)
-        prev_layer = tf.concat([prev_layer, variables], 1)
+        prev_layer = tf.concat([prev_layer, v], 1)
         # Fully connected layers here
         for i in [2048, 512, 128, 16]:
             prev_layer = tf.layers.dense(
@@ -83,14 +76,17 @@ class Network():
         if summary and summary_writer is not None and summary_ops is not None:
             _, loss, step, summary = session.run([self.trainer, self.loss, self.global_step, summary_ops], feed_dict=feed_dict)
             summary_writer.add_summary(summary, step)
-            print("Training step: %i, loss: %.3f [%.2f s]"%(step, loss, timer()-pre))
+            if step%10 == 0:
+                print("Training step: %i, loss: %.3f [%.2f s]"%(step, loss, (timer()-pre)*10))
         else:
             _, loss, step = session.run([self.trainer, self.loss, self.global_step], feed_dict=feed_dict)
-            print("Training step: %i, loss: %.3f (%.2f s)"%(step, loss, timer()-pre))
+            if step%10 == 0:
+                print("Training step: %i, loss: %.3f (%.2f s)"%(step, loss, (timer()-pre)*10))
         return step, loss
     
-    def train(self, x, y, iterations=1000, summary_interval=10):
-        self._create_model(x, y, None, True)
+    def learn(self, batch_size=64, iterations=10000, summary_interval=100):
+        x, v, y = get_lane_shuffle_batch(batch_size)
+        self._create_model(x, v, y, None, True)
         summary_ops = tf.summary.merge_all()
         session, saver = self.get_session()
         summary_writer = tf.summary.FileWriter(self.log_directory, session.graph)
@@ -109,14 +105,17 @@ class Network():
             summary_writer.close()
             session.close()
 
-    def predict(self, input_fn, output_fn):
-        x = self._get_x_placeholder()
-        self._create_model(x, None, None, False)
+    def predict(self, input_fn, output_fn, image_width=200, image_height=60, image_depth=4, additional_variables=3):
+        x = tf.placeholder(tf.float32, [None, image_width*image_height*image_depth])
+        x_ = tf.reshape(x, [-1, image_width, image_height, image_depth])
+        v = tf.placeholder(tf.float32, [None, additional_variables])
+        self._create_model(*get_middle_lane(x_, v, None), None, False)
         session, _ = self.get_session()
         try:
             while True:
-                out = session.run(self.output, feed_dict={x: input_fn()})
-                output_fn(out[0])
+                xi, vi = input_fn()
+                out = session.run(self.output, feed_dict={x: xi, v: vi})
+                output_fn(out)
         except (KeyboardInterrupt, StopIteration):
             pass
         finally:

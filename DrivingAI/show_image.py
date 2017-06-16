@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 import numpy as np
-from record import read_data
+from data import get_batch
 from communication import Recorder
 import tensorflow as tf
 
@@ -27,7 +27,7 @@ def show_image(x, input_fn=None):
 
 
 def show_record():
-    x, _ = read_data()
+    x, _ = get_batch(1)
     show_image(x)
 
 def show_connected():

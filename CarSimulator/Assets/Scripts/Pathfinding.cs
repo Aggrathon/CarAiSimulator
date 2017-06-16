@@ -149,7 +149,7 @@ public class Pathfinding
 			{
 				Vector2 old = (Vector2)road[road.Count - 1] - (Vector2)road[road.Count - 2];
 				Vector2 test = (Vector2)node - (Vector2)road[road.Count - 2];
-				if (test.sqrMagnitude < 80 && Vector2.Angle(old, test) < 25f)
+				if (test.sqrMagnitude < 30 && Vector2.Angle(old, test) < 25f)
 				{
 					road[road.Count - 1] = node;
 				}

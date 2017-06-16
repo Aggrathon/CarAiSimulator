@@ -24,6 +24,8 @@ public class TrackManager : MonoBehaviour {
 	int checkpoint = 0;
 	[System.NonSerialized]
 	public float directionAngle;
+	[System.NonSerialized]
+	public Vector2 directionVector;
 
 	void Start () {
 		if (generateOnLoad)
@@ -121,5 +123,10 @@ public class TrackManager : MonoBehaviour {
 				|| Vector3.Angle(direction, road.road[(checkpoint+1) % road.road.Count] - car.position) < 30)
 				NextCheckpoint();
 		}
+		direction = car.transform.InverseTransformDirection(direction);
+		if (direction.sqrMagnitude == 0)
+			directionVector = direction;
+		else
+			directionVector = direction.normalized;
 	}
 }
