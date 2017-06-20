@@ -28,6 +28,7 @@ public class CommunicationManager : MonoBehaviour {
 	bool requireTexture;
 	float lastSend;
 	int imageSize;
+	bool requireScore;
 
 	void OnEnable () {
 		reconnectButton.SetActive(false);
@@ -69,6 +70,24 @@ public class CommunicationManager : MonoBehaviour {
 			}
 			requireTexture = false;
 		}
+		else if(requireScore) 
+		{
+			if (Time.timeScale == 0)
+			{
+				Time.timeScale = 1;
+				requireScore = false;
+			}
+			else
+			{
+				int score = (int)(track.CompleteBatch()*100f);
+				buffer[3] = (byte)(score >> 24);
+				buffer[2] = (byte)(score >> 16);
+				buffer[1] = (byte)(score >> 8);
+				buffer[0] = (byte)(score >> 0);
+				requireScore = false;
+				Time.timeScale = 0;
+			}
+		}
 		else if (thread == null || !thread.IsAlive)
 		{
 			if (!car.userInput) car.userInput = true;
@@ -85,6 +104,7 @@ public class CommunicationManager : MonoBehaviour {
 		{
 			socket.Connect("localhost", PORT);
 			socket.Receive(buffer);
+			track.ResetScore();
 			switch (buffer[0])
 			{
 				case SIMULATOR_RECORD:
@@ -106,10 +126,24 @@ public class CommunicationManager : MonoBehaviour {
 						FillStatusBuffer();
 						if (socket.Send(buffer, imageSize * 4 + 5, SocketFlags.None) == 0)
 							break;
-						if (socket.Receive(buffer) < 2)
+						int size = socket.Receive(buffer);
+						if (size == 2)
+						{
+							car.horizontalSteering = ((float)buffer[0]) / 127.5f - 1f;
+							car.verticalSteering = ((float)buffer[1]) / 127.5f - 1f;
+						}
+						else if (size == 1)
+						{
+							requireScore = true;
+							while (requireScore) System.Threading.Thread.Yield();
+							if (socket.Send(buffer, 4, SocketFlags.None) == 0)
+								break;
+							if (socket.Receive(buffer) == 0)
+								break;
+							requireScore = true;
+						}
+						else
 							break;
-						car.horizontalSteering = ((float)buffer[0]) / 127.5f - 1f;
-						car.verticalSteering = ((float)buffer[1]) / 127.5f - 1f;
 					}
 					break;
 			}
@@ -138,7 +172,7 @@ public class CommunicationManager : MonoBehaviour {
 	void FillStatusBuffer()
 	{
 		requireTexture = true;
-		while (requireTexture) ;
+		while (requireTexture) System.Threading.Thread.Yield();
 		buffer[imageSize * 4 + 0] = (byte)((track.directionVector.x + 1) * 127.5f);
 		buffer[imageSize * 4 + 1] = (byte)((track.directionVector.y + 1) * 127.5f);
 		buffer[imageSize*4 + 2] = (byte)(speedometer.speed*3+100);

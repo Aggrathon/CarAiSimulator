@@ -1,5 +1,6 @@
 
 import socket
+import sys
 
 PORT = 38698
 BUFFER_SIZE = 1 << 18
@@ -63,8 +64,11 @@ class Recorder(Communicator):
             raise StopIteration
             return None
         if heartbeat:
-            self.send(HEARTBEAT)
+            self.send_heartbeat()
         return data
+    
+    def send_heartbeat(self):
+        self.send(HEARTBEAT)
         
 
 class Driver(Recorder):
@@ -72,9 +76,16 @@ class Driver(Recorder):
 
     def set_action(self, h, v):
         data = bytes([int((h+1)*127.5), int((v+1)*127.5)])
-        print("Driving  |  h: %.2f  v: %.2f"%(h,v))
+        #print("Driving  |  h: %+.2f  v: %+.2f"%(h,v))
         self.send(data)
-
+    
+    def get_score(self):
+        self.get_status()
+        self.send_heartbeat()
+        data = self.recieve()
+        score = int.from_bytes(data, sys.byteorder, signed=True)
+        return score
+        
 
 if __name__ == "__main__":
     with Communicator() as c:

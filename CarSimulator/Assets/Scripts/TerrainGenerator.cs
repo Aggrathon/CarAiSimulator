@@ -77,7 +77,7 @@ public class TerrainGenerator : MonoBehaviour
 				{
 					int x = (int)((float)i / (float)textureSize * size);
 					int y = (int)((float)j / (float)textureSize * size);
-					textures[i, j, 3] = Mathf.Clamp01(1 - Mathf.Abs((heights[x, y] - sandHeight) * 4));
+					textures[i, j, 3] = Mathf.Clamp01(1 - Mathf.Abs((heights[x, y] - sandHeight) * 3));
 					textures[i, j, 3] = textures[i, j, 3] * textures[i, j, 3];
 					textures[i, j, 2] = Mathf.Clamp01(Mathf.Pow((heights[x, y] - mountainHeight) * 8, 3));
 					textures[i, j, 4] = 0;

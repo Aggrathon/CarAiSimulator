@@ -143,12 +143,31 @@ public class TrackManager : MonoBehaviour {
 	void CalculateScore()
 	{
 		Vector3 curPos = car.position;
-		float impr = Vector3.Distance(scorePos, road.road[checkpoint]) - Vector3.Distance(curPos, road.road[checkpoint]);
+		Vector3 target = road.road[checkpoint % road.road.Count];
+		float impr = Vector3.Distance(scorePos, target) - Vector3.Distance(curPos, target);
 		if (impr >= 1)
 		{
 			scoreRaw += impr * scorePerDistance;
 			scorePos = curPos;
 		}
 		scoreText.text = ((int)score).ToString();
+	}
+
+	public float CompleteBatch()
+	{
+		float totalScore = score;
+		if ( road.IsRoad(car.position) && 
+			car.velocity.sqrMagnitude > 1f &&
+			road.IsRoad(car.position + 1.5f* car.velocity) )
+		{
+			ResetCar();
+		}
+		scoreRaw = 0;
+		return totalScore;
+	}
+
+	public void ResetScore()
+	{
+		scoreRaw = 0f;
 	}
 }

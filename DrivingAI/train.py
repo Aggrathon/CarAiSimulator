@@ -12,7 +12,11 @@ def main():
             return [x], [v]
         def out(val):
             driver.set_action(val[0][0], val[0][1])
-        nn.predict(inp, out)
+        def score():
+            return [driver.get_score()]
+        def cont():
+            driver.send_heartbeat()
+        nn.train(inp, out, score, cont, 64, 10000)
 
 
 if __name__ == "__main__":
