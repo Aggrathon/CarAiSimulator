@@ -16,6 +16,7 @@ public class RoadGenerator : MonoBehaviour {
 	public int roadWidth = 10;
 	public int pathFindingSpacing = 10;
 	public int roadTextureIndex = 4;
+	public int roadMarkerTextureIndex = 6;
 
 	Terrain terrain;
 	float[,] tempHeights;
@@ -172,6 +173,35 @@ public class RoadGenerator : MonoBehaviour {
 			px = tx;
 			py = ty;
 		}
+		prev = path.Count - 1;
+		px = path[prev].GetTextureX(graphWidth, textureWidth, graphMargin);
+		py = path[prev].GetTextureY(graphWidth, textureWidth, graphMargin);
+		for (int i = 0; i < path.Count; i++)
+		{
+			int tx = path[i].GetTextureX(graphWidth, textureWidth, graphMargin);
+			int ty = path[i].GetTextureY(graphWidth, textureWidth, graphMargin);
+			int counter = 2;
+			Drawing.DrawLine(tx, ty, px, py, (x, y, f) => {
+				counter++;
+				if (counter > 3)
+				{
+					if (counter == 7)
+						counter = 0;
+				}
+				else
+				{
+					textures[x, y, roadTextureIndex] = 0f;
+					textures[x, y, roadMarkerTextureIndex] = 1f;
+				}
+			});
+			Drawing.DrawCircle(px, py, 3, (x, y) => {
+				textures[x, y, roadTextureIndex] = 1f;
+				textures[x, y, roadMarkerTextureIndex] = 0f;
+			});
+			prev = i;
+			px = tx;
+			py = ty;
+		}
 		//Draw road Heights
 		roadWidth = (int)((float)roadWidth * (float)heightWidth / (float)(textureWidth - 1)) + 3;
 		//Flag waypoints
@@ -276,11 +306,11 @@ public class RoadGenerator : MonoBehaviour {
 			{
 				idealHeight = (
 					                        heights[x - 1, y + 2] +     heights[x, y + 2] +     heights[x + 1, y + 2] +
-					heights[x - 2, y + 1] + heights[x - 1, y + 1] * 2 + heights[x, y + 1] * 3 + heights[x + 1, y + 1] * 2 + heights[x + 2, y + 1] +
-					heights[x - 2, y] +     heights[x - 1, y] * 3 +     heights[x, y] * 3 +     heights[x + 1, y] * 3 +     heights[x + 2, y] +
-					heights[x - 2, y - 1] + heights[x - 1, y - 1] * 2 + heights[x, y - 1] * 3 + heights[x + 1, y - 1] * 2 + heights[x + 2, y - 1] +
+					heights[x - 2, y + 1] + heights[x - 1, y + 1] * 2 + heights[x, y + 1] * 4 + heights[x + 1, y + 1] * 2 + heights[x + 2, y + 1] +
+					heights[x - 2, y] +     heights[x - 1, y] * 4 +     heights[x, y] * 3 +     heights[x + 1, y] * 4 +     heights[x + 2, y] +
+					heights[x - 2, y - 1] + heights[x - 1, y - 1] * 2 + heights[x, y - 1] * 4 + heights[x + 1, y - 1] * 2 + heights[x + 2, y - 1] +
 					                        heights[x - 1, y - 2] +     heights[x, y - 2] +     heights[x + 1, y - 2]
-					) / 35;
+					) / 39;
 			}
 		}
 

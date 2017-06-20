@@ -82,6 +82,7 @@ public class TerrainGenerator : MonoBehaviour
 					textures[i, j, 2] = Mathf.Clamp01(Mathf.Pow((heights[x, y] - mountainHeight) * 8, 3));
 					textures[i, j, 4] = 0;
 					textures[i, j, 1] = 0;
+					textures[i, j, 6] = 0;
 					if (heights[x, y] < sandHeight)
 					{
 						textures[i, j, 0] = 0;

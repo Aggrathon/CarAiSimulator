@@ -8,7 +8,7 @@ def get_shuffle_batch(batch=64):
 def get_batch(batch=64):
     return tf.train.batch([*read_data()], batch, capacity=2000)
 
-def create_lane_holder(image, variables, steering, pixel_shift=20, steering_shift=0.3):
+def create_lane_holder(image, variables, steering, pixel_shift=20, steering_shift=0.2):
     new_width = int(image.get_shape()[0])-2*pixel_shift
     image = tf.stack([
         tf.slice(image, [pixel_shift,0,0], [new_width, -1, -1]),
@@ -20,7 +20,7 @@ def create_lane_holder(image, variables, steering, pixel_shift=20, steering_shif
     steering = tf.stack([steering, steering+st_const, steering-st_const])
     return image, variables, steering
 
-def get_lane_shuffle_batch(batch=64, pixel_shift=20, steering_shift=0.3):
+def get_lane_shuffle_batch(batch=64, pixel_shift=20, steering_shift=0.2):
     return tf.train.shuffle_batch(
         tensors=[*create_lane_holder(*read_data(), pixel_shift, steering_shift)],
         batch_size=batch, capacity=8000, min_after_dequeue=1000, enqueue_many=True)

@@ -71,7 +71,7 @@ GameObject:
   - component: {fileID: 4862486891088152}
   - component: {fileID: 33691057148251158}
   - component: {fileID: 23793614858131346}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: WheelBR
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -103,7 +103,7 @@ GameObject:
   - component: {fileID: 4918920612244220}
   - component: {fileID: 33387960689796842}
   - component: {fileID: 23922658133482608}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: WheelFR
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -155,7 +155,7 @@ GameObject:
   - component: {fileID: 4061308661413954}
   - component: {fileID: 33943988078577080}
   - component: {fileID: 23668706819125238}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: WheelFL
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -190,7 +190,7 @@ GameObject:
   - component: {fileID: 4195981876438070}
   - component: {fileID: 33514934050175866}
   - component: {fileID: 23763852187323804}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: WheelBL
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -708,8 +708,8 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1771249745005176}
-  m_LocalRotation: {x: 0, y: -0.09949349, z: 0, w: 0.9950383}
-  m_LocalPosition: {x: 1, y: 203.36, z: 352.2}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -460.8, y: 173.57, z: 516}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4962568169063202}
@@ -719,7 +719,7 @@ Transform:
   - {fileID: 4135357222843366}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: -11.42, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &23154710238141664
 MeshRenderer:
   m_ObjectHideFlags: 1
@@ -1617,14 +1617,15 @@ MonoBehaviour:
   m_SteerHelper: 0.644
   m_TractionControl: 1
   m_FullTorqueOverAllWheels: 2000
-  m_ReverseTorque: 500
+  m_ReverseTorque: 800
   m_MaxHandbrakeTorque: 100000000
   m_Downforce: 100
   m_SpeedType: 1
   m_Topspeed: 150
-  m_RevRangeBoundary: 1
+  NoOfGears: 6
+  m_RevRangeBoundary: 1.1
   m_SlipLimit: 0.3
-  m_BrakeTorque: 20000
+  m_BrakeTorque: 15000
 --- !u!114 &114103457232607798
 MonoBehaviour:
   m_ObjectHideFlags: 1
