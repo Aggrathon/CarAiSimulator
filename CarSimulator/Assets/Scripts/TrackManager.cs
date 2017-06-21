@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class TrackManager : MonoBehaviour {
+	static Dictionary<int, string> scoreTextCache;
 
 	public TerrainGenerator terrain;
 	public RoadGenerator road;
@@ -35,6 +36,8 @@ public class TrackManager : MonoBehaviour {
 	public float score { get { return scoreRaw - resetTime / resetTimeout * resetPenalty; } }
 
 	void Start () {
+		if (scoreTextCache == null)
+			scoreTextCache = new Dictionary<int, string>();
 		if (generateOnLoad)
 			GenerateTrack();
 		else
@@ -64,8 +67,12 @@ public class TrackManager : MonoBehaviour {
 			GenerateTrack();
 		else
 		{
-			scorePos = road.road[checkpoint] + new Vector3(0, 0.5f, 0);
-			car.MovePosition(road.road[checkpoint] + new Vector3(0, 1, 0));
+			RaycastHit hit;
+			if (Physics.Raycast(road.road[checkpoint] + new Vector3(0, 3, 0), Vector3.down, out hit, 10))
+				car.MovePosition(hit.point + new Vector3(0, 0.5f, 0));
+			else
+				car.MovePosition(road.road[checkpoint] + new Vector3(0, 1, 0));
+			scorePos = car.position;
 			car.MoveRotation(Quaternion.LookRotation(road.road[(checkpoint + 1) % road.road.Count] - road.road[checkpoint]));
 			car.angularVelocity = Vector3.zero;
 			car.velocity = Vector3.zero;
@@ -150,7 +157,13 @@ public class TrackManager : MonoBehaviour {
 			scoreRaw += impr * scorePerDistance;
 			scorePos = curPos;
 		}
-		scoreText.text = ((int)score).ToString();
+		string text;
+		if (!scoreTextCache.TryGetValue((int)score, out text))
+		{
+			text = ((int)score).ToString();
+			scoreTextCache.Add((int)score, text);
+		}
+		scoreText.text = text; 
 	}
 
 	public float CompleteBatch()

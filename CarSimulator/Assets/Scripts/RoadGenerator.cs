@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 using System;
-using static Pathfinding;
 
 [RequireComponent(typeof(Terrain))]
 [ExecuteInEditMode]
@@ -19,10 +18,11 @@ public class RoadGenerator : MonoBehaviour {
 	public int roadMarkerTextureIndex = 6;
 
 	Terrain terrain;
-	float[,] tempHeights;
-	float[,,] tempTextures;
+	float[,] heights;
+	float[,,] textures;
 	Thread thread;
 	string status;
+	bool finishedGenerating;
 
 	[HideInInspector]
 	public List<Vector3> road;
@@ -39,17 +39,19 @@ public class RoadGenerator : MonoBehaviour {
 	{
 		if (thread != null)
 			thread.Abort();
-		tempHeights = null;
-		tempTextures = null;
 		status = null;
 		int heightWidth = terrain.terrainData.heightmapWidth;
 		float heightScaleX = terrain.terrainData.heightmapScale.x;
 		float heightScaleY = terrain.terrainData.heightmapScale.y;
-		float[,] heights = terrain.terrainData.GetHeights(0, 0, heightWidth, heightWidth);
 		int textureWidth = terrain.terrainData.alphamapWidth;
-		float[,,] textures = terrain.terrainData.GetAlphamaps(0, 0, textureWidth, textureWidth);
 		Vector3 offset = transform.position;
 		float waterHeight = water.position.y / terrain.terrainData.heightmapScale.y + 0.03f;
+		finishedGenerating = false;
+		
+		if (heights == null)
+			heights = terrain.terrainData.GetHeights(0, 0, heightWidth, heightWidth);
+		if(textures == null)
+			textures = terrain.terrainData.GetAlphamaps(0, 0, textureWidth, textureWidth);
 
 		thread = new Thread(() => {
 			try
@@ -58,30 +60,29 @@ public class RoadGenerator : MonoBehaviour {
 				//Create path
 				int pathFindingGraphMargin = 5;
 				int pathFindingGraphSize = heightWidth / pathFindingSpacing - 2 * pathFindingGraphMargin;
-				PathFindNode[,] nodes = new PathFindNode[pathFindingGraphSize, pathFindingGraphSize];
+				Pathfinding.PathFindNode[,] nodes = new Pathfinding.PathFindNode[pathFindingGraphSize, pathFindingGraphSize];
 				for (int i = 1; i < pathFindingGraphSize-1; i++)
 				{
 					for (int j = 1; j < pathFindingGraphSize-1; j++)
 					{
 						float nodeHeight = heights[(i + pathFindingGraphMargin) * pathFindingSpacing, (j + pathFindingGraphMargin) * pathFindingSpacing];
 						if (nodeHeight > waterHeight)
-							nodes[i, j] = new PathFindNode(i, j, nodeHeight);
+							nodes[i, j] = new Pathfinding.PathFindNode(i, j, nodeHeight);
 					}
 				}
 				Pathfinding pf = new Pathfinding(nodes, heightPenalty);
-				List<PathFindNode> path = pf.GetRoad(numCheckpoints, rnd);
+				List<Pathfinding.PathFindNode> path = pf.GetRoad(numCheckpoints, rnd);
 				//Create roads
 				status = "Painting roads";
 				DrawRoads(path, heights, textures, roadWidth, pathFindingGraphSize, pathFindingGraphMargin);
-				tempHeights = heights;
-				tempTextures = textures;
-				List<Vector3> road = new List<Vector3>();
-				foreach (var n in path) {
-					Vector3 pos = n.GetPosition(pathFindingSpacing * heightScaleX, heightScaleY, offset, pathFindingGraphMargin);
+				road.Clear();
+				for (int i = 0; i < path.Count; i++)
+				{
+					Vector3 pos = path[i].GetPosition(pathFindingSpacing * heightScaleX, heightScaleY, offset, pathFindingGraphMargin);
 					if(road.Count < 1 || Vector3.SqrMagnitude(pos-road[road.Count-1]) > 1)
 						road.Add(pos);
 				}
-				this.road = road;
+				finishedGenerating = true;
 			}
 			catch (Exception e)
 			{
@@ -90,36 +91,32 @@ public class RoadGenerator : MonoBehaviour {
 		});
 		thread.Start();
 		StartCoroutine(WaitForResult());
-		Debug.Log("Generating Road");
+		Utils.ClearMemory();
 	}
 
 
 	IEnumerator WaitForResult()
 	{
-		while (tempHeights == null || tempTextures == null)
+		while (!finishedGenerating)
 		{
-#if UNITY_EDITOR
 			if (status != null)
 			{
 				Debug.Log(status);
 				status = null;
 			}
-			if(!thread.IsAlive)
+			if (thread != null && !thread.IsAlive)
 			{
 				Debug.Log("Road Generation Thread Has Died");
 				Generate();
 				yield break;
 			}
-#endif
 			yield return null;
 		}
-		terrain.terrainData.SetHeights(0, 0, tempHeights);
-		terrain.terrainData.SetAlphamaps(0, 0, tempTextures);
+		terrain.terrainData.SetHeights(0, 0, heights);
+		terrain.terrainData.SetAlphamaps(0, 0, textures);
 		terrain.Flush();
 
 		thread = null;
-		tempHeights = null;
-		tempTextures = null;
 		yield return null;
 		reflection.RenderProbe();
 		Debug.Log("Generated Road");
@@ -130,7 +127,10 @@ public class RoadGenerator : MonoBehaviour {
 	private void OnDisable()
 	{
 		if (thread != null)
+		{
 			thread.Abort();
+			thread = null;
+		}
 	}
 
 	public bool IsRoad(Vector3 pos)
@@ -142,7 +142,7 @@ public class RoadGenerator : MonoBehaviour {
 	}
 
 
-	private void DrawRoads(List<PathFindNode> path, float[,] heights, float[,,] textures, int roadWidth, int graphWidth, int graphMargin)
+	private void DrawRoads(List<Pathfinding.PathFindNode> path, float[,] heights, float[,,] textures, int roadWidth, int graphWidth, int graphMargin)
 	{
 		int textureWidth = textures.GetLength(0);
 		int heightWidth = heights.GetLength(0);
@@ -252,14 +252,14 @@ public class RoadGenerator : MonoBehaviour {
 	{
 		public float idealHeight;
 		public bool smooth;
-		public List<PathFindNode> roadNodes;
+		public List<Pathfinding.PathFindNode> roadNodes;
 		public List<float> strengths;
 
-		public void AddNode(PathFindNode node, float strength)
+		public void AddNode(Pathfinding.PathFindNode node, float strength)
 		{
 			if(roadNodes == null)
 			{
-				roadNodes = new List<PathFindNode>();
+				roadNodes = new List<Pathfinding.PathFindNode>();
 				roadNodes.Add(node);
 				strengths = new List<float>();
 				strengths.Add(strength);

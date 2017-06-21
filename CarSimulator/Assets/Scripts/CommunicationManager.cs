@@ -31,6 +31,7 @@ public class CommunicationManager : MonoBehaviour {
 	int imageSize;
 	bool requireScore;
 	bool setupFastForward;
+	int layer;
 
 	void OnEnable () {
 		reconnectButton.SetActive(false);
@@ -40,6 +41,7 @@ public class CommunicationManager : MonoBehaviour {
 		if (thread != null && thread.IsAlive) thread.Abort();
 		if (texture == null) texture = new Texture2D(cameraView.width, cameraView.height);
 		imageSize = texture.width * texture.height;
+		layer = 0;
 		requireTexture = false;
 		requireScore = false;
 		setupFastForward = false;
@@ -56,26 +58,70 @@ public class CommunicationManager : MonoBehaviour {
 
 	private void Update()
 	{
-		if(requireTexture && Time.timeScale > 0 && lastSend < Time.time)
+		if(requireTexture && Time.timeScale > 0 && (layer != 0 ||  lastSend < Time.time))
 		{
-			lastSend = Time.time + sendInterval;
-			RenderTexture.active = cameraView;
-			texture = new Texture2D(cameraView.width, cameraView.height);
-			texture.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0);
-			texture.Apply();
-			for (int i = 0; i < texture.width; i++)
+			switch (layer)
 			{
-				for (int j = 0; j < texture.height; j++)
-				{
-					Color32 c = texture.GetPixel(i, j);
-					int index = 4 * (i + texture.width * j);
-					buffer[index] = c.r;
-					buffer[index+1] = c.g;
-					buffer[index+2] = c.b;
-					buffer[index+3] = c.a;
-				}
+				case 1:
+					for (int i = 0; i < texture.width; i++)
+					{
+						for (int j = 0; j < texture.height; j++)
+						{
+							Color32 c = texture.GetPixel(i, j);
+							int index = 4 * (i + texture.width * j);
+							buffer[index] = c.r;
+						}
+					}
+					layer++;
+					break;
+				case 2:
+					for (int i = 0; i < texture.width; i++)
+					{
+						for (int j = 0; j < texture.height; j++)
+						{
+							Color32 c = texture.GetPixel(i, j);
+							int index = 4 * (i + texture.width * j);
+							buffer[index + 1] = c.g;
+							buffer[index + 3] = c.a;
+						}
+					}
+					layer++;
+					break;
+				case 3:
+					for (int i = 0; i < texture.width; i++)
+					{
+						for (int j = 0; j < texture.height; j++)
+						{
+							Color32 c = texture.GetPixel(i, j);
+							int index = 4 * (i + texture.width * j);
+							buffer[index + 2] = c.b;
+						}
+					}
+					layer++;
+					break;
+				case 4:
+					for (int i = 0; i < texture.width; i++)
+					{
+						for (int j = 0; j < texture.height; j++)
+						{
+							Color32 c = texture.GetPixel(i, j);
+							int index = 4 * (i + texture.width * j);
+							buffer[index + 3] = c.a;
+						}
+					}
+					layer = 0;
+					requireTexture = false;
+					Destroy(texture);
+					break;
+				default:
+					RenderTexture.active = cameraView;
+					texture = new Texture2D(cameraView.width, cameraView.height);
+					texture.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0);
+					texture.Apply();
+					layer = 1;
+					lastSend = Time.time + sendInterval;
+					break;
 			}
-			requireTexture = false;
 		}
 		else if(requireScore) 
 		{
@@ -98,7 +144,6 @@ public class CommunicationManager : MonoBehaviour {
 		else if (setupFastForward)
 		{
 			fastForwardButton.gameObject.SetActive(true);
-			fastForwardButton.isOn = false;
 			fastForwardButton.onValueChanged.RemoveAllListeners();
 			fastForwardButton.onValueChanged.AddListener((v) =>
 			{
@@ -108,6 +153,10 @@ public class CommunicationManager : MonoBehaviour {
 					DisableFastForward();
 			});
 			setupFastForward = false;
+			if (SystemInfo.graphicsDeviceID == 0)
+				EnableFastForward();
+			else
+				DisableFastForward();
 		}
 		if (thread == null || !thread.IsAlive)
 		{
@@ -159,7 +208,7 @@ public class CommunicationManager : MonoBehaviour {
 						else if (size == 1)
 						{
 							requireScore = true;
-							while (requireScore) System.Threading.Thread.Yield();
+							while (requireScore);
 							if (socket.Send(buffer, 4, SocketFlags.None) == 0)
 								break;
 							if (socket.Receive(buffer) == 0)
@@ -196,7 +245,7 @@ public class CommunicationManager : MonoBehaviour {
 	void FillStatusBuffer()
 	{
 		requireTexture = true;
-		while (requireTexture) System.Threading.Thread.Yield();
+		while (requireTexture);
 		buffer[imageSize * 4 + 0] = (byte)((track.directionVector.x + 1) * 127.5f);
 		buffer[imageSize * 4 + 1] = (byte)((track.directionVector.y + 1) * 127.5f);
 		buffer[imageSize*4 + 2] = (byte)(speedometer.speed*3+100);
@@ -207,7 +256,8 @@ public class CommunicationManager : MonoBehaviour {
 
 	void EnableFastForward()
 	{
-		fastForwardButton.isOn = true;
+		if (!fastForwardButton.isOn)
+			fastForwardButton.isOn = true;
 		if (Time.timeScale > 0)
 			Time.timeScale = fastForwardSpeed;
 		QualitySettings.vSyncCount = 0;
@@ -218,7 +268,8 @@ public class CommunicationManager : MonoBehaviour {
 
 	void DisableFastForward()
 	{
-		fastForwardButton.isOn = false;
+		if(fastForwardButton.isOn)
+			fastForwardButton.isOn = false;
 		if (Time.timeScale > 0)
 			Time.timeScale = 1;
 		Time.fixedDeltaTime = 0.01f;

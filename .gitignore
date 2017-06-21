@@ -34,3 +34,7 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+
+### Own ###
+Build/

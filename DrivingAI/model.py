@@ -43,19 +43,20 @@ class Network():
             self.loss = tf.losses.mean_squared_error(self.output, y) + tf.losses.get_regularization_loss()
             adam = tf.train.AdamOptimizer(1e-5, 0.85)
             self.trainer = adam.minimize(self.loss, self.global_step)
+            tf.summary.scalar('Loss', self.loss)
         elif score is not None:
-            max = self.max_score.assign(tf.maximum(self.max_score, score[0]), True)
-            tf.summary.scalar("Max Score", max/100)
+            max = self.max_score.assign(tf.maximum(self.max_score*0.99, score[0]), True)
             score_loss = (1-score[0]/max)*0.5
             tf.losses.add_loss(score_loss)
             self.loss = score_loss + tf.losses.get_regularization_loss()
             adam = tf.train.AdamOptimizer(1e-5)
             self.trainer = adam.minimize(self.loss, self.global_step)
+            tf.summary.scalar("Max Score", max/100)
+            tf.summary.scalar('Loss', self.loss)
         # Summaries
         h, v = tf.split(self.output, [1,1], 1)
         tf.summary.histogram('Horizontal', h)
         tf.summary.histogram('Vertical', v)
-        tf.summary.scalar('Loss', self.loss)
 
 
     def get_session(self):

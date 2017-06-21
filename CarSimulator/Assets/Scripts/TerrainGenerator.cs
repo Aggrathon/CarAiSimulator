@@ -14,8 +14,9 @@ public class TerrainGenerator : MonoBehaviour
 
 	Terrain terrain;
 	Thread thread;
-	float[,] tempHeights;
-	float[,,] tempTextures;
+	float[,] heights;
+	float[,,] textures;
+	bool finishedGenerating;
 
 	private void Awake()
 	{
@@ -28,15 +29,16 @@ public class TerrainGenerator : MonoBehaviour
 	{
 		if (thread != null)
 			thread.Abort();
-		tempHeights = null;
-		tempTextures = null;
 		int size = terrain.terrainData.heightmapResolution;
-		float[,] heights = terrain.terrainData.GetHeights(0, 0, size, size);
 		float mapHeight = terrain.terrainData.heightmapScale.y;
 		float mapWidth = terrain.terrainData.heightmapWidth;
 		int textureSize = terrain.terrainData.alphamapWidth;
 		float waterHeight = water.position.y / mapHeight;
-		float[,,] textures = terrain.terrainData.GetAlphamaps(0, 0, textureSize, textureSize);
+		if(heights == null)
+			heights = terrain.terrainData.GetHeights(0, 0, size, size);
+		if (textures == null)
+			textures = terrain.terrainData.GetAlphamaps(0, 0, textureSize, textureSize);
+		finishedGenerating = false;
 		for (int h = 0; h < detailLayers.Length; h++)
 		{
 			detailLayers[h].x = Random.Range(-1000f, 1000f);
@@ -95,23 +97,28 @@ public class TerrainGenerator : MonoBehaviour
 					}
 				}
 			}
-			tempTextures = textures;
-			tempHeights = heights;
+			finishedGenerating = true;
 		});
 		thread.Start();
 		StartCoroutine(WaitForResult());
 		Debug.Log("Generating Terrain");
+		Utils.ClearMemory();
 	}
 
 	IEnumerator WaitForResult()
 	{
-		while (tempHeights == null || tempTextures == null)
+		while (!finishedGenerating)
+		{
+			if(thread != null && !thread.IsAlive)
+			{
+				Generate();
+				yield break;
+			}
 			yield return null;
-		terrain.terrainData.SetHeights(0, 0, tempHeights);
-		terrain.terrainData.SetAlphamaps(0, 0, tempTextures);
+		}
+		terrain.terrainData.SetHeights(0, 0, heights);
+		terrain.terrainData.SetAlphamaps(0, 0, textures);
 		terrain.Flush();
-		tempHeights = null;
-		tempTextures = null;
 		thread = null;
 		Debug.Log("Generated Terrain");
 		yield return null;
@@ -127,7 +134,10 @@ public class TerrainGenerator : MonoBehaviour
 	private void OnDestroy()
 	{
 		if (thread != null)
+		{
 			thread.Abort();
+			thread = null;
+		}
 	}
 
 	[System.Serializable]

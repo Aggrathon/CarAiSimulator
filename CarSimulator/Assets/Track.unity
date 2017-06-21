@@ -697,7 +697,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 302073197}
   m_LocalRotation: {x: 0.13052621, y: 0.000000086674866, z: -0.000000011410964, w: 0.9914449}
-  m_LocalPosition: {x: -460.8, y: 173.57, z: 516}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 646397383}
@@ -2548,7 +2548,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1401683643}
   m_LocalRotation: {x: 0, y: 0.00000008742278, z: 0, w: 1}
-  m_LocalPosition: {x: -460.8, y: 173.57, z: 516}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 680253527}
@@ -2671,6 +2671,14 @@ Prefab:
       propertyPath: m_LocalScale.z
       value: 5000
       objectReference: {fileID: 0}
+    - target: {fileID: 2300000, guid: 780611a67e8e941a2b3aa96e5915a793, type: 2}
+      propertyPath: m_ReceiveShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 100000, guid: 780611a67e8e941a2b3aa96e5915a793, type: 2}
+      propertyPath: m_StaticEditorFlags
+      value: 4294967295
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 780611a67e8e941a2b3aa96e5915a793, type: 2}
   m_IsPrefabParent: 0
@@ -2761,7 +2769,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 4294967295
   m_IsActive: 1
 --- !u!108 &1703390179
 Light:
@@ -2923,7 +2931,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 4294967295
   m_IsActive: 1
 --- !u!108 &1847707118
 Light:
@@ -3217,6 +3225,7 @@ ParticleSystem:
   playOnAwake: 1
   useUnscaledTime: 1
   autoRandomSeed: 1
+  useRigidbodyForVelocity: 1
   startDelay:
     serializedVersion: 2
     minMaxState: 0
@@ -3224,20 +3233,44 @@ ParticleSystem:
     minScalar: 0
     maxCurve:
       serializedVersion: 2
-      m_Curve: []
+      m_Curve:
+      - serializedVersion: 2
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
     minCurve:
       serializedVersion: 2
-      m_Curve: []
+      m_Curve:
+      - serializedVersion: 2
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
   moveWithTransform: 0
   moveWithCustomTransform: {fileID: 0}
   scalingMode: 1
-  randomSeed: -393553905
+  randomSeed: 1550788918
   InitialModule:
     serializedVersion: 3
     enabled: 1
@@ -6511,15 +6544,15 @@ Prefab:
     m_Modifications:
     - target: {fileID: 4992016694825952, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0, type: 2}
       propertyPath: m_LocalPosition.x
-      value: -460.8
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4992016694825952, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0, type: 2}
       propertyPath: m_LocalPosition.y
-      value: 173.57
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4992016694825952, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0, type: 2}
       propertyPath: m_LocalPosition.z
-      value: 516
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4992016694825952, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0, type: 2}
       propertyPath: m_LocalRotation.x
@@ -6541,13 +6574,13 @@ Prefab:
       propertyPath: m_RootOrder
       value: 4
       objectReference: {fileID: 0}
-    - target: {fileID: 65390445100521180, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+    - target: {fileID: 65200389536270960, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
         type: 2}
       propertyPath: m_Material
       value: 
       objectReference: {fileID: 13400000, guid: 67db31eead11e8d6d00011d98d76c639,
         type: 2}
-    - target: {fileID: 65200389536270960, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+    - target: {fileID: 65390445100521180, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
         type: 2}
       propertyPath: m_Material
       value: 

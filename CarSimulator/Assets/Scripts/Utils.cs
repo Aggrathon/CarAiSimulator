@@ -20,4 +20,10 @@ public static class Utils {
 	{
 		return x - margin > 0 && x + margin < width && y - margin > 0 && y + margin < height;
 	}
+
+	public static void ClearMemory()
+	{
+		System.GC.Collect();
+		Resources.UnloadUnusedAssets();
+	}
 }
