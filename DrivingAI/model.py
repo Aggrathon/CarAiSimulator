@@ -44,7 +44,8 @@ class Network():
             adam = tf.train.AdamOptimizer(1e-5, 0.85)
             self.trainer = adam.minimize(self.loss, self.global_step)
         elif score is not None:
-            max = self.max_score.assign(tf.maximum(self.max_score, tf.abs(score[0])), True)
+            max = self.max_score.assign(tf.maximum(self.max_score, score[0]), True)
+            tf.summary.scalar("Max Score", max/100)
             score_loss = (1-score[0]/max)*0.5
             tf.losses.add_loss(score_loss)
             self.loss = score_loss + tf.losses.get_regularization_loss()
@@ -54,7 +55,6 @@ class Network():
         h, v = tf.split(self.output, [1,1], 1)
         tf.summary.histogram('Horizontal', h)
         tf.summary.histogram('Vertical', v)
-        tf.summary.scalar("Max Absolute Score", self.max_score)
         tf.summary.scalar('Loss', self.loss)
 
 

@@ -16,7 +16,7 @@ def main():
             return [driver.get_score()]
         def cont():
             driver.send_heartbeat()
-        nn.train(inp, out, score, cont, 64, 10000)
+        nn.train(inp, out, score, cont, 64, 50000)
 
 
 if __name__ == "__main__":

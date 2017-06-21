@@ -156,9 +156,11 @@ public class TrackManager : MonoBehaviour {
 	public float CompleteBatch()
 	{
 		float totalScore = score;
-		if ( road.IsRoad(car.position) && 
-			car.velocity.sqrMagnitude > 1f &&
-			road.IsRoad(car.position + 1.5f* car.velocity) )
+		if (!road.IsRoad(car.position) ||
+			car.velocity.sqrMagnitude < 1f ||
+			!(road.IsRoad(car.position + 1.5f * car.velocity) ||
+			road.IsRoad(car.position + car.velocity + car.transform.right * car.velocity.magnitude * 0.5f) ||
+			road.IsRoad(car.position + car.velocity - car.transform.right * car.velocity.magnitude * 0.5f)))
 		{
 			ResetCar();
 		}
@@ -169,5 +171,6 @@ public class TrackManager : MonoBehaviour {
 	public void ResetScore()
 	{
 		scoreRaw = 0f;
+		resetTime = 0f;
 	}
 }
