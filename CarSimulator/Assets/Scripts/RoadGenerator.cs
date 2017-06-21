@@ -48,10 +48,8 @@ public class RoadGenerator : MonoBehaviour {
 		float waterHeight = water.position.y / terrain.terrainData.heightmapScale.y + 0.03f;
 		finishedGenerating = false;
 		
-		if (heights == null)
-			heights = terrain.terrainData.GetHeights(0, 0, heightWidth, heightWidth);
-		if(textures == null)
-			textures = terrain.terrainData.GetAlphamaps(0, 0, textureWidth, textureWidth);
+		heights = terrain.terrainData.GetHeights(0, 0, heightWidth, heightWidth);
+		textures = terrain.terrainData.GetAlphamaps(0, 0, textureWidth, textureWidth);
 
 		thread = new Thread(() => {
 			try
@@ -91,12 +89,13 @@ public class RoadGenerator : MonoBehaviour {
 		});
 		thread.Start();
 		StartCoroutine(WaitForResult());
-		Utils.ClearMemory();
 	}
 
 
 	IEnumerator WaitForResult()
 	{
+		yield return null;
+		Utils.ClearMemory();
 		while (!finishedGenerating)
 		{
 			if (status != null)

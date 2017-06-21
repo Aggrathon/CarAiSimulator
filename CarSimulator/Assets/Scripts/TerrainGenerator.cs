@@ -34,10 +34,8 @@ public class TerrainGenerator : MonoBehaviour
 		float mapWidth = terrain.terrainData.heightmapWidth;
 		int textureSize = terrain.terrainData.alphamapWidth;
 		float waterHeight = water.position.y / mapHeight;
-		if(heights == null)
-			heights = terrain.terrainData.GetHeights(0, 0, size, size);
-		if (textures == null)
-			textures = terrain.terrainData.GetAlphamaps(0, 0, textureSize, textureSize);
+		heights = terrain.terrainData.GetHeights(0, 0, size, size);
+		textures = terrain.terrainData.GetAlphamaps(0, 0, textureSize, textureSize);
 		finishedGenerating = false;
 		for (int h = 0; h < detailLayers.Length; h++)
 		{
@@ -73,6 +71,10 @@ public class TerrainGenerator : MonoBehaviour
 			float meanHeight = sumHeight / (size * size);
 			float sandHeight = waterHeight+0.02f;
 			float mountainHeight = (meanHeight*1.5f+0.9f)*0.5f;
+			for (int i = 0; i < textures.GetLength(0); i++)
+				for (int j = 0; j < textures.GetLength(1); j++)
+					for (int k = 0; k < textures.GetLength(2); k++)
+						textures[i, j, k] = 0;
 			for (int i = 0; i < textureSize; i++)
 			{
 				for (int j = 0; j < textureSize; j++)
@@ -82,19 +84,10 @@ public class TerrainGenerator : MonoBehaviour
 					textures[i, j, 3] = Mathf.Clamp01(1 - Mathf.Abs((heights[x, y] - sandHeight) * 3));
 					textures[i, j, 3] = textures[i, j, 3] * textures[i, j, 3];
 					textures[i, j, 2] = Mathf.Clamp01(Mathf.Pow((heights[x, y] - mountainHeight) * 8, 3));
-					textures[i, j, 4] = 0;
-					textures[i, j, 1] = 0;
-					textures[i, j, 6] = 0;
 					if (heights[x, y] < sandHeight)
-					{
-						textures[i, j, 0] = 0;
 						textures[i, j, 5] = 1 - textures[i, j, 3];
-					}
 					else
-					{
 						textures[i, j, 0] = 1 - textures[i, j, 3] - textures[i, j, 2];
-						textures[i, j, 5] = 0;
-					}
 				}
 			}
 			finishedGenerating = true;
@@ -102,11 +95,12 @@ public class TerrainGenerator : MonoBehaviour
 		thread.Start();
 		StartCoroutine(WaitForResult());
 		Debug.Log("Generating Terrain");
-		Utils.ClearMemory();
 	}
 
 	IEnumerator WaitForResult()
 	{
+		yield return null;
+		Utils.ClearMemory();
 		while (!finishedGenerating)
 		{
 			if(thread != null && !thread.IsAlive)

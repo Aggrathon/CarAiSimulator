@@ -88,6 +88,7 @@ public class Pathfinding
 	public List<PathFindNode> GetRoad(int numCheckpoints, System.Random rnd)
 	{
 		List<PathFindNode> path = new List<PathFindNode>();
+		path.Clear();
 		PathFindNode start = GetNewRoadGoal(null, path, rnd, false);
 		PathFindNode target = null;
 		for (int i = 0; i < numCheckpoints; i++)
@@ -147,16 +148,7 @@ public class Pathfinding
 			}
 			if (cont)
 			{
-				Vector2 old = (Vector2)road[road.Count - 1] - (Vector2)road[road.Count - 2];
-				Vector2 test = (Vector2)node - (Vector2)road[road.Count - 2];
-				if (test.sqrMagnitude < 30 && Vector2.Angle(old, test) < 25f)
-				{
-					road[road.Count - 1] = node;
-				}
-				else
-				{
-					road.Add(node);
-				}
+				road.Add(node);
 			}
 		}
 	}
