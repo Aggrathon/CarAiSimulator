@@ -45,7 +45,7 @@ class Network():
             self.trainer = adam.minimize(self.loss, self.global_step)
             tf.summary.scalar('Loss', self.loss)
         elif score is not None:
-            max = self.max_score.assign(tf.maximum(self.max_score*0.99, score[0]), True)
+            max = self.max_score.assign(tf.maximum(self.max_score*0.999, score[0]), True)
             score_loss = (1-score[0]/max)*0.5
             tf.losses.add_loss(score_loss)
             self.loss = score_loss + tf.losses.get_regularization_loss()

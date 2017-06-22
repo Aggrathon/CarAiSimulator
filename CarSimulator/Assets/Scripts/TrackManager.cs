@@ -18,12 +18,14 @@ public class TrackManager : MonoBehaviour {
 	[Space]
 	[Range(0f, 20f)]
 	public float resetTimeout = 10f;
-	[Range(0f,100f)]
+	[Range(0f,120f)]
 	public float waypointDistance = 50f;
 	public bool generateOnLoad = false;
 	[Header("Score")]
-	public float resetPenalty = 100f;
-	public float scorePerDistance = 0.1f;
+	public float resetPenalty = 50f;
+	public float scorePerDistance = 0.2f;
+	public float finalPositionScore = 10f;
+
 
 	float resetTime = 0f;
 	int checkpoint = 0;
@@ -136,7 +138,7 @@ public class TrackManager : MonoBehaviour {
 		directionArrow.rotation = Quaternion.Euler(0, 0, -directionAngle);
 		if (Vector3.SqrMagnitude(direction) < waypointDistance * waypointDistance)
 		{
-			if (Vector3.SqrMagnitude(direction) < 0.3f * waypointDistance * waypointDistance
+			if (Vector3.SqrMagnitude(direction) < 0.35f * waypointDistance * waypointDistance
 				|| Vector3.Angle(direction, road.road[(checkpoint+1) % road.road.Count] - car.position) < 30)
 				NextCheckpoint();
 		}
@@ -176,7 +178,10 @@ public class TrackManager : MonoBehaviour {
 			road.IsRoad(car.position + car.velocity - car.transform.right * car.velocity.magnitude * 0.5f)))
 		{
 			ResetCar();
+			totalScore -= finalPositionScore;
 		}
+		else
+			totalScore += finalPositionScore; 
 		scoreRaw = 0;
 		return totalScore;
 	}

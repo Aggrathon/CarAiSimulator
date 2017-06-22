@@ -2077,10 +2077,11 @@ MonoBehaviour:
   progressionBar: {fileID: 1370579769}
   scoreText: {fileID: 913874800}
   resetTimeout: 10
-  waypointDistance: 90
+  waypointDistance: 100
   generateOnLoad: 1
   resetPenalty: 50
-  scorePerDistance: 0.2
+  scorePerDistance: 0.18
+  finalPositionScore: 20
 --- !u!4 &1244140418
 Transform:
   m_ObjectHideFlags: 0
@@ -6586,6 +6587,11 @@ Prefab:
       value: 
       objectReference: {fileID: 13400000, guid: 67db31eead11e8d6d00011d98d76c639,
         type: 2}
+    - target: {fileID: 54662148389184514, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_CollisionDetection
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0, type: 2}
   m_IsPrefabParent: 0

@@ -28,5 +28,7 @@ public class Speedometer : MonoBehaviour {
 	{
 		speed = Vector3.Dot(car.velocity, car.transform.forward);
 		speedText.text = cache[Mathf.Clamp((int)(speed*3.6f+100f), 0, 250)];
+		if (car.IsSleeping())
+			car.WakeUp();
 	}
 }
