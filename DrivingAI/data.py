@@ -1,13 +1,6 @@
 import tensorflow as tf
 from record import read_data
 
-
-def get_shuffle_batch(batch=64):
-    return tf.train.shuffle_batch([*read_data()], batch, 8000, 1000)
-
-def get_batch(batch=64):
-    return tf.train.batch([*read_data()], batch, capacity=2000)
-
 def create_lane_holder(image, variables, steering, pixel_shift=20, steering_shift=0.2):
     new_width = int(image.get_shape()[0])-2*pixel_shift
     image = tf.stack([
@@ -21,9 +14,10 @@ def create_lane_holder(image, variables, steering, pixel_shift=20, steering_shif
     return image, variables, steering
 
 def get_lane_shuffle_batch(batch=64, pixel_shift=20, steering_shift=0.2):
-    return tf.train.shuffle_batch(
-        tensors=[*create_lane_holder(*read_data(), pixel_shift, steering_shift)],
-        batch_size=batch, capacity=8000, min_after_dequeue=1000, enqueue_many=True)
+    with tf.variable_scope("input"):
+        return tf.train.shuffle_batch(
+            tensors=[*create_lane_holder(*read_data(), pixel_shift, steering_shift)],
+            batch_size=batch, capacity=8000, min_after_dequeue=1000, enqueue_many=True)
 
 def get_middle_lane(image, variables, steering, pixel_shift=20):
     new_width = int(image.get_shape()[1])-2*pixel_shift

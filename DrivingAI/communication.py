@@ -76,7 +76,6 @@ class Driver(Recorder):
 
     def set_action(self, h, v):
         data = bytes([int((h+1)*127.5), int((v+1)*127.5)])
-        #print("Driving  |  h: %+.2f  v: %+.2f"%(h,v))
         self.send(data)
     
     def get_score(self):

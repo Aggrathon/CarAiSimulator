@@ -1,19 +1,23 @@
 import tensorflow as tf
-from model import Network
+from model import DoubleNetwork
 from communication import Driver
+from data import get_middle_lane
 
 
 def main():
     tf.logging.set_verbosity(tf.logging.INFO)
-    nn = Network()
+    imgs = tf.placeholder(tf.float32, [None, 200*60*4])
+    vars = tf.placeholder(tf.float32, [None, 3])
+    nn = DoubleNetwork(*get_middle_lane(tf.reshape(imgs, [-1, 200, 60, 4]), vars, None), False)
     with Driver() as driver:
         def inp():
             x, v, y = driver.get_status()
-            return [x], [v]
+            return {imgs: [x], vars: [v]}
         def out(val):
-            driver.set_action(val[0][0], val[0][1])
-        nn.predict(inp, out)
-
+            h, v = val[0]
+            print("Driving  |  h: %+.2f  v: %+.2f"%(h,v))
+            driver.set_action(h, v)
+        nn.drive(inp, out)
 
 if __name__ == "__main__":
     main()
