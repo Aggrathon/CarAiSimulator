@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class TrackManager : MonoBehaviour {
-	static Dictionary<int, string> scoreTextCache;
 
 	public TerrainGenerator terrain;
 	public RoadGenerator road;
@@ -14,7 +13,6 @@ public class TrackManager : MonoBehaviour {
 	public Text resetText;
 	public RectTransform directionArrow;
 	public Slider progressionBar;
-	public Text scoreText;
 	[Space]
 	[Range(0f, 20f)]
 	public float resetTimeout = 10f;
@@ -22,24 +20,33 @@ public class TrackManager : MonoBehaviour {
 	public float waypointDistance = 50f;
 	public bool generateOnLoad = false;
 	[Header("Score")]
-	public float resetPenalty = 50f;
-	public float scorePerDistance = 0.2f;
-	public float finalPositionScore = 10f;
-
+	[Range(0f, 1f)]
+	public float scoreBalanceResetDistance = 0.4f;
+	public float targetSpeed = 100f;
 
 	float resetTime = 0f;
 	int checkpoint = 0;
 
-	Vector3 scorePos;
-	float scoreRaw;
+	bool hasReset;
 	
 	public float directionAngle { get; protected set; }
 	public Vector2 directionVector { get; protected set; }
-	public float score { get { return scoreRaw - resetTime / resetTimeout * resetPenalty; } }
+	public float score {
+		get {
+			if (hasReset)
+			{
+				hasReset = false;
+				return 0;
+			}
+			float forward = Vector3.Dot(car.velocity, (road.road[(checkpoint + 1) % road.road.Count] - road.road[checkpoint % road.road.Count]).normalized);
+			Debug.Log(forward * 3.6f);
+			float score = resetTime <= 0 ? 1 - scoreBalanceResetDistance : 0;
+			score += Mathf.Min(targetSpeed, forward * 3.6f) / targetSpeed * scoreBalanceResetDistance;
+			return score * 0.9f + 0.1f;
+		}
+	}
 
 	void Start () {
-		if (scoreTextCache == null)
-			scoreTextCache = new Dictionary<int, string>();
 		if (generateOnLoad)
 			GenerateTrack();
 		else
@@ -74,7 +81,6 @@ public class TrackManager : MonoBehaviour {
 				car.MovePosition(hit.point + new Vector3(0, 0.5f, 0));
 			else
 				car.MovePosition(road.road[checkpoint] + new Vector3(0, 1, 0));
-			scorePos = car.position;
 			car.MoveRotation(Quaternion.LookRotation(road.road[(checkpoint + 1) % road.road.Count] - road.road[checkpoint]));
 			car.angularVelocity = Vector3.zero;
 			car.velocity = Vector3.zero;
@@ -104,7 +110,6 @@ public class TrackManager : MonoBehaviour {
 		{
 			CheckNeedReset();
 			CheckTrackProgression();
-			CalculateScore();
 		}
 	}
 
@@ -125,7 +130,7 @@ public class TrackManager : MonoBehaviour {
 				if(resetTime > resetTimeout)
 				{
 					ResetCar();
-					scoreRaw -= resetPenalty;
+					hasReset = true;
 				}
 			}
 		}
@@ -147,48 +152,5 @@ public class TrackManager : MonoBehaviour {
 			directionVector = direction;
 		else
 			directionVector = direction.normalized;
-	}
-
-	void CalculateScore()
-	{
-		Vector3 curPos = car.position;
-		Vector3 target = road.road[checkpoint % road.road.Count];
-		float impr = Vector3.Distance(scorePos, target) - Vector3.Distance(curPos, target);
-		if (impr >= 1)
-		{
-			scoreRaw += impr * scorePerDistance;
-			scorePos = curPos;
-		}
-		string text;
-		if (!scoreTextCache.TryGetValue((int)score, out text))
-		{
-			text = ((int)score).ToString();
-			scoreTextCache.Add((int)score, text);
-		}
-		scoreText.text = text; 
-	}
-
-	public float CompleteBatch()
-	{
-		float totalScore = score;
-		if (!road.IsRoad(car.position) ||
-			car.velocity.sqrMagnitude < 1f ||
-			!(road.IsRoad(car.position + 1.5f * car.velocity) ||
-			road.IsRoad(car.position + car.velocity + car.transform.right * car.velocity.magnitude * 0.5f) ||
-			road.IsRoad(car.position + car.velocity - car.transform.right * car.velocity.magnitude * 0.5f)))
-		{
-			ResetCar();
-			totalScore -= finalPositionScore;
-		}
-		else
-			totalScore += finalPositionScore; 
-		scoreRaw = 0;
-		return totalScore;
-	}
-
-	public void ResetScore()
-	{
-		scoreRaw = 0f;
-		resetTime = 0f;
 	}
 }

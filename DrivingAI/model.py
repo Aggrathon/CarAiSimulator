@@ -9,7 +9,7 @@ class DoubleNetwork():
     log_directory = os.path.join('data', 'logs')
     model_file_name = os.path.join(network_directory, 'model')
     
-    def __init__(self, images, variables, outputs=None, training=True):
+    def __init__(self, images, variables, outputs=None, weights=1, training=True):
         os.makedirs(self.log_directory, exist_ok=True)
         os.makedirs(self.network_directory, exist_ok=True)
         self.global_step = tf.Variable(0, name='global_step')
@@ -73,7 +73,7 @@ class DoubleNetwork():
 
 class Network():
 
-    def __init__(self, input_image, input_variables, example_output, training=True, global_step=None, name="Network"):
+    def __init__(self, input_image, input_variables, example_output=None, weights=1, training=True, global_step=None, name="Network"):
         self.name = name
         with tf.variable_scope(name):
             # Convolutional layers here
@@ -96,7 +96,7 @@ class Network():
             # Trainers and losses here
             self.vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=name)
             if example_output is not None:
-                self.loss = tf.losses.mean_squared_error(self.output, example_output) + tf.losses.get_regularization_loss(name)
+                self.loss = tf.reduce_mean(tf.squared_difference(self.output, example_output)*weights) + tf.losses.get_regularization_loss(name)
                 adam = tf.train.AdamOptimizer(1e-5, 0.85)
                 self.trainer = adam.minimize(self.loss, global_step, self.vars)
                 tf.summary.scalar('Loss', self.loss)

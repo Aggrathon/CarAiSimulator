@@ -29,7 +29,6 @@ public class CommunicationManager : MonoBehaviour {
 	bool requireTexture;
 	float lastSend;
 	int imageSize;
-	bool requireScore;
 	bool setupFastForward;
 	int layer;
 
@@ -43,11 +42,17 @@ public class CommunicationManager : MonoBehaviour {
 		imageSize = texture.width * texture.height;
 		layer = 0;
 		requireTexture = false;
-		requireScore = false;
 		setupFastForward = false;
 		DisableFastForward();
 		thread = new Thread(Thread);
 		thread.Start();
+	}
+
+	private void OnDisable()
+	{
+		if (thread != null && thread.IsAlive)
+			thread.Abort();
+		DisableFastForward();
 	}
 
 	private void OnDestroy()
@@ -120,25 +125,13 @@ public class CommunicationManager : MonoBehaviour {
 					texture.Apply();
 					layer = 1;
 					lastSend = Time.time + sendInterval;
+					buffer[imageSize * 4 + 0] = (byte)((track.directionVector.x + 1) * 127.5f);
+					buffer[imageSize * 4 + 1] = (byte)((track.directionVector.y + 1) * 127.5f);
+					buffer[imageSize * 4 + 2] = (byte)(speedometer.speed * 3 + 100);
+					buffer[imageSize * 4 + 3] = (byte)(car.horizontalSteering * 127.5f + 127.5f);
+					buffer[imageSize * 4 + 4] = (byte)(car.verticalSteering * 127.5f + 127.5f);
+					buffer[imageSize * 4 + 5] = (byte)(track.score * 255f);
 					break;
-			}
-		}
-		else if(requireScore) 
-		{
-			if (Time.timeScale == 0)
-			{
-				Time.timeScale = fastForwardButton.isOn? fastForwardSpeed : 1;
-				requireScore = false;
-			}
-			else
-			{
-				int score = (int)(track.CompleteBatch()*100f);
-				buffer[3] = (byte)(score >> 24);
-				buffer[2] = (byte)(score >> 16);
-				buffer[1] = (byte)(score >> 8);
-				buffer[0] = (byte)(score >> 0);
-				requireScore = false;
-				Time.timeScale = 0;
 			}
 		}
 		else if (setupFastForward)
@@ -176,7 +169,6 @@ public class CommunicationManager : MonoBehaviour {
 		{
 			socket.Connect("localhost", PORT);
 			socket.Receive(buffer);
-			track.ResetScore();
 			switch (buffer[0])
 			{
 				case SIMULATOR_RECORD:
@@ -185,7 +177,7 @@ public class CommunicationManager : MonoBehaviour {
 					while (true)
 					{
 						FillStatusBuffer();
-						if (socket.Send(buffer, imageSize * 4 + 5, SocketFlags.None) == 0)
+						if (socket.Send(buffer, imageSize * 4 + 6, SocketFlags.None) == 0)
 							break;
 						if (socket.Receive(buffer) == 0)
 							break;
@@ -197,23 +189,13 @@ public class CommunicationManager : MonoBehaviour {
 					while (true)
 					{
 						FillStatusBuffer();
-						if (socket.Send(buffer, imageSize * 4 + 5, SocketFlags.None) == 0)
+						if (socket.Send(buffer, imageSize * 4 + 6, SocketFlags.None) == 0)
 							break;
 						int size = socket.Receive(buffer);
 						if (size == 2)
 						{
 							car.horizontalSteering = ((float)buffer[0]) / 127.5f - 1f;
 							car.verticalSteering = ((float)buffer[1]) / 127.5f - 1f;
-						}
-						else if (size == 1)
-						{
-							requireScore = true;
-							while (requireScore);
-							if (socket.Send(buffer, 4, SocketFlags.None) == 0)
-								break;
-							if (socket.Receive(buffer) == 0)
-								break;
-							requireScore = true;
 						}
 						else
 							break;
@@ -246,11 +228,6 @@ public class CommunicationManager : MonoBehaviour {
 	{
 		requireTexture = true;
 		while (requireTexture);
-		buffer[imageSize * 4 + 0] = (byte)((track.directionVector.x + 1) * 127.5f);
-		buffer[imageSize * 4 + 1] = (byte)((track.directionVector.y + 1) * 127.5f);
-		buffer[imageSize*4 + 2] = (byte)(speedometer.speed*3+100);
-		buffer[imageSize*4 + 3] = (byte)(car.horizontalSteering * 127.5f + 127.5f);
-		buffer[imageSize*4 + 4] = (byte)(car.verticalSteering * 127.5f + 127.5f);
 	}
 
 

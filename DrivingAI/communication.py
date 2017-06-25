@@ -43,29 +43,26 @@ class Recorder(Communicator):
     
     @classmethod
     def bytes_to_tensor(cls, data):
-        image = [float(i)/255.0 for i in data[:-5]]
+        image = [float(i)/255.0 for i in data[:-6]]
         variables = [
-            float(data[-5])/127.5 - 1.0, float(data[-4])/127.5 - 1.0, #direction
-            (float(data[-3])-100)/3 #speed
+            float(data[-6])/127.5 - 1.0, float(data[-5])/127.5 - 1.0, #direction
+            (float(data[-4])-100)/3 #speed
         ]
-        outdata = [float(data[-2])/127.5-1, float(data[-1])/127.5-1]
-        return image, variables, outdata
+        steer = [float(data[-3])/127.5-1, float(data[-2])/127.5-2]
+        score = [float(data[-1])/255]
+        return image, variables, steer, score
         
     def get_status(self):
-        data = self.recieve()
-        if data is None or len(data) == 0:
+        try:
+            data = self.recieve()
+            if data is None or len(data) == 0:
+                raise StopIteration
+                return None
+            return Recorder.bytes_to_tensor(data)
+        except:
+            ConnectionResetError:
             raise StopIteration
             return None
-        return Recorder.bytes_to_tensor(data)
-    
-    def get_status_bytes(self, heartbeat=True):
-        data = self.recieve()
-        if data is None or len(data) == 0:
-            raise StopIteration
-            return None
-        if heartbeat:
-            self.send_heartbeat()
-        return data
     
     def send_heartbeat(self):
         self.send(HEARTBEAT)
