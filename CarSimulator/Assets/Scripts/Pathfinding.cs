@@ -127,7 +127,7 @@ public class Pathfinding
 				continue;
 			}
 
-			if (node.SqrDistance(road[road.Count - 1]) <= 9)
+			if (node.SqrDistance(road[road.Count - 1]) <= 4)
 			{
 				continue;
 			}
@@ -139,7 +139,7 @@ public class Pathfinding
 			bool cont = true;
 			for (int i = 0; i < road.Count-2; i++)
 			{
-				if (node.SqrDistance(road[i]) <= 9)
+				if (node.SqrDistance(road[i]) <= 4)
 				{
 					cont = false;
 					road.Add(road[i]);

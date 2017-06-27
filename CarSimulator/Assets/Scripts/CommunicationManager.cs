@@ -50,15 +50,20 @@ public class CommunicationManager : MonoBehaviour {
 
 	private void OnDisable()
 	{
-		if (thread != null && thread.IsAlive)
-			thread.Abort();
 		DisableFastForward();
+		if (thread != null && thread.IsAlive)
+		{
+			thread.Abort();
+			while (thread != null) ;
+		}
 	}
 
 	private void OnDestroy()
 	{
-		if (thread != null && thread.IsAlive)
+		if (thread != null && thread.IsAlive) {
 			thread.Abort();
+			while (thread != null) ;
+		}
 	}
 
 	private void Update()
@@ -205,15 +210,12 @@ public class CommunicationManager : MonoBehaviour {
 		}
 		catch (ThreadAbortException)
 		{
-			thread = null;
 		}
 		catch (SocketException)
 		{
-			thread = null;
 		}
 		catch (System.Exception e)
 		{
-			thread = null;
 			Debug.LogException(e);
 		}
 		finally
@@ -250,7 +252,8 @@ public class CommunicationManager : MonoBehaviour {
 		if (Time.timeScale > 0)
 			Time.timeScale = 1;
 		Time.fixedDeltaTime = 0.01f;
-		Camera.main.rect = new Rect(0, 0, 1, 1);
+		if(Camera.main)
+			Camera.main.rect = new Rect(0, 0, 1, 1);
 		AudioListener.pause = false;
 	}
 }

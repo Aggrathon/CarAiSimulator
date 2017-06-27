@@ -28,6 +28,7 @@ public class CarSteering : MonoBehaviour
     private void Awake()
     {
         car = GetComponent<CarController>();
+		car.GetComponentInChildren<WheelCollider>().ConfigureVehicleSubsteps(0.5f, 8, 8);
     }
 
 	private void Update()

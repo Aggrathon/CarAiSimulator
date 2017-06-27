@@ -15,6 +15,7 @@ def record_data(data_queue):
             while data is not None and len(data) > 0:
                 buffer.add_item(list(data))
                 for i in buffer.get_items():
+                    i[-1] = i[-1]*0.5+0.5
                     data_queue.put(i)
                 counter += 1
                 print("Snapshots recieved:",counter, end='\r')

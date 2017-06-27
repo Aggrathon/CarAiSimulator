@@ -5,6 +5,10 @@ import os
 import datetime
 
 DATA_DIRECTORY = os.path.join('data', 'records')
+IMAGE_WIDTH = 200
+IMAGE_HEIGHT = 60
+IMAGE_DEPTH = 4
+VARIABLE_COUNT = 3
 
 def write_data(data_queue, id):
     os.makedirs(DATA_DIRECTORY, exist_ok=True)
@@ -22,7 +26,7 @@ def write_data(data_queue, id):
             data_queue.task_done()
 
 
-def read_data(image_width=200, image_height=60, image_depth=4, variable_count=3):
+def read_data(image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT, image_depth=IMAGE_DEPTH, variable_count=VARIABLE_COUNT):
     reader = tf.TFRecordReader()
     files = [os.path.join(DATA_DIRECTORY, f) for f in os.listdir(DATA_DIRECTORY) if '.tfrecord' in f]
     np.random.shuffle(files)
@@ -54,22 +58,23 @@ def create_lane_variations(image, variables, steering, score, pixel_shift=20, st
     return image, variables, steering, score
 
 
-def get_shuffle_batch(batch=64, pixel_shift=20, steering_shift=0.2):
+def get_shuffle_batch(batch=16, pixel_shift=20, steering_shift=0.2):
     with tf.variable_scope("input"):
         return tf.train.shuffle_batch(
             tensors=[*create_lane_variations(*read_data(), pixel_shift, steering_shift)],
             batch_size=batch, capacity=8000, min_after_dequeue=1000, enqueue_many=True)
 
-def get_middle_lane(image, variables, steering, score, pixel_shift=20):
+def get_middle_lane(image, pixel_shift=20):
     new_width = int(image.get_shape()[1])-2*pixel_shift
-    return tf.slice(image, [0, pixel_shift, 0, 0], [-1, new_width, -1, -1]), variables, steering, score
+    return tf.slice(image, [0, pixel_shift, 0, 0], [-1, new_width, -1, -1])
 
 
 class score_buffer():
 
-    def __init__(self, length=64, falloff=0.95):
+    def __init__(self, length=64, falloff=0.95, min_score_length=32):
         self.length = length
         self.falloff = falloff
+        self.min_score_length = min_score_length
         self.buffer = deque()
         self.to_score = 0
         self.sum = 0
@@ -77,29 +82,30 @@ class score_buffer():
             self.sum = self.sum + falloff**i
     
     def add_item(self, item):
-        falloff = 1
         for i, ls in enumerate(self.buffer):
-            if i > self.length or i > self.to_score:
+            if i > self.to_score:
                 break
-            ls[-1][0] = ls[-1][0]+falloff*item[-1][0]
-            falloff = falloff*self.falloff
+            ls[-1][0] = ls[-1][0]+(self.falloff**abs(i-4))*item[-1][0]
         if item[-1][0] == 0:
-            for _ in range(min(16, self.to_score)):
+            for _ in range(min(self.min_score_length, self.to_score)):
                 self.buffer.popleft()
             self.buffer.appendleft(item)
             self.to_score = 1
         else:
             item[-1][0] = 0
             self.buffer.appendleft(item)
-            self.to_score = self.to_score + 1
+            self.to_score = min(self.to_score + 1, self.length)
     
     def get_items(self):
-        while len(self.buffer) > self.to_score or len(self.buffer) > self.length:
+        while len(self.buffer) > self.to_score:
             yield self.buffer.pop()
     
     def clear_buffer(self):
-        self.to_score = min(self.to_score, 16)
-        ret = [i for i in self.get_items()]
+        self.to_score = min(self.to_score, self.min_score_length)
+        for i in self.get_items():
+            yield i
         self.buffer.clear()
         self.to_score = 0
-        return ret
+    
+    def get_num_scored(self):
+        return len(self.buffer) - self.to_score

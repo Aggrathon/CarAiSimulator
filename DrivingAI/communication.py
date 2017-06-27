@@ -19,10 +19,17 @@ class Communicator():
             print("Connection established")
 
     def recieve(self):
-        return self.socket.recv(BUFFER_SIZE)
+        try:
+            return self.socket.recv(BUFFER_SIZE)
+        except Exception as e:
+            print(e)
+            return None
     
     def send(self, data):
-        self.socket.send(data)
+        try:
+            self.socket.send(data)
+        except Exception as e:
+            print(e)
     
     def close(self):
         self.socket.close()
@@ -48,21 +55,16 @@ class Recorder(Communicator):
             float(data[-6])/127.5 - 1.0, float(data[-5])/127.5 - 1.0, #direction
             (float(data[-4])-100)/3 #speed
         ]
-        steer = [float(data[-3])/127.5-1, float(data[-2])/127.5-2]
+        steer = [float(data[-3])/127.5-1, float(data[-2])/127.5-1]
         score = [float(data[-1])/255]
         return image, variables, steer, score
         
     def get_status(self):
-        try:
-            data = self.recieve()
-            if data is None or len(data) == 0:
-                raise StopIteration
-                return None
-            return Recorder.bytes_to_tensor(data)
-        except:
-            ConnectionResetError:
+        data = self.recieve()
+        if data is None or len(data) == 0:
             raise StopIteration
             return None
+        return Recorder.bytes_to_tensor(data)
     
     def send_heartbeat(self):
         self.send(HEARTBEAT)

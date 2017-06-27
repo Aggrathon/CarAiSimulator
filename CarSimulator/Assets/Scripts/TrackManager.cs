@@ -39,9 +39,9 @@ public class TrackManager : MonoBehaviour {
 				return 0;
 			}
 			float forward = Vector3.Dot(car.velocity, (road.road[(checkpoint + 1) % road.road.Count] - road.road[checkpoint % road.road.Count]).normalized);
-			Debug.Log(forward * 3.6f);
 			float score = resetTime <= 0 ? 1 - scoreBalanceResetDistance : 0;
-			score += Mathf.Min(targetSpeed, forward * 3.6f) / targetSpeed * scoreBalanceResetDistance;
+			float speed = Mathf.Min(targetSpeed, forward * 3.6f) / targetSpeed;
+			score += (1-(1-speed)*(1-speed)) * scoreBalanceResetDistance;
 			return score * 0.9f + 0.1f;
 		}
 	}
@@ -81,9 +81,9 @@ public class TrackManager : MonoBehaviour {
 				car.MovePosition(hit.point + new Vector3(0, 0.5f, 0));
 			else
 				car.MovePosition(road.road[checkpoint] + new Vector3(0, 1, 0));
-			car.MoveRotation(Quaternion.LookRotation(road.road[(checkpoint + 1) % road.road.Count] - road.road[checkpoint]));
+			car.MoveRotation(Quaternion.LookRotation(road.road[(checkpoint + 1) % road.road.Count] - road.road[checkpoint], Vector3.up));
 			car.angularVelocity = Vector3.zero;
-			car.velocity = Vector3.zero;
+			car.velocity = car.transform.forward;
 			resetTime = 0f;
 			resetText.gameObject.SetActive(false);
 			NextCheckpoint();

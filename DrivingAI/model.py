@@ -1,8 +1,8 @@
 import tensorflow as tf
 from timeit import default_timer as timer
 import os
-from data import get_lane_shuffle_batch, get_middle_lane
-
+from data import score_buffer
+import numpy as np
 
 class DoubleNetwork():
     network_directory = os.path.join('data', 'network')
@@ -15,12 +15,13 @@ class DoubleNetwork():
         self.global_step = tf.Variable(0, name='global_step')
         self.network_a = Network(images, variables, outputs, training, global_step=self.global_step, name="Network_A")
         self.network_b = Network(images, variables, outputs, training, name="Network_B")
-        if training:
+        if training is not None and training is not False:
             self.saver = tf.train.Saver()
         else:
             self.saver = None
         self.session = tf.Session()
-        tf.train.start_queue_runners(self.session)
+        self.coord = tf.train.Coordinator()
+        tf.train.start_queue_runners(self.session, self.coord)
         self.session.run(tf.global_variables_initializer())
         try:
             ckpt = tf.train.get_checkpoint_state(self.network_directory)
@@ -38,6 +39,8 @@ class DoubleNetwork():
     def __exit__(self, type, value, traceback):
         if self.saver is not None:
             self.saver.save(self.session, self.model_file_name, self.global_step)
+        self.coord.request_stop()
+        self.coord.join()
         self.session.close()
     
     def learn(self, iterations=50000, summary_interval=100):
@@ -46,14 +49,16 @@ class DoubleNetwork():
         try:
             last_save = timer()
             step = 1
+            time = 1
             for _ in range(iterations):
                 pre = timer()
                 _, aloss, step = self.session.run([self.network_a.trainer, self.network_a.loss, self.global_step])
                 _, bloss = self.session.run([self.network_b.trainer, self.network_b.loss])
                 if step%summary_interval == 0:
                     summary_writer.add_summary(self.session.run(summary_ops), step)
+                time = 0.9*time + 0.1 *(timer()-pre)
                 if step%10 == 0:
-                    print("Training step: %i, Loss A: %.3f, Loss B: %.3f (%.2f s)"%(step, aloss, bloss, (timer()-pre)))
+                    print("Training step: %i, Loss A: %.3f, Loss B: %.3f (%.2f s)"%(step, aloss, bloss, time), end='\r')
                 if timer() - last_save > 1800:
                     self.saver.save(self.session, self.model_file_name, self.global_step)
                     last_save = timer()
@@ -69,6 +74,69 @@ class DoubleNetwork():
                 output_fn(self.session.run(net.output, feed_dict=input_fn()))
         except (KeyboardInterrupt, StopIteration):
             pass
+
+    def train(self, input_fn, output_fn, feed_fn, batch_size=16, iterations=50000, summary_interval=50):
+        summary_ops = tf.summary.merge_all()
+        summary_writer = tf.summary.FileWriter(self.log_directory, self.session.graph)
+        buffer = score_buffer()
+        array_a = []
+        array_b = []
+        try:
+            last_save = timer()
+            step = 1
+            time = 1
+            for _ in range(iterations):
+                if len(array_a) < batch_size or len(array_b) < batch_size:
+                    print("Filling the reinforcement buffer...     ", end='\r')
+                    left = True
+                    while buffer.get_num_scored() < 40 * batch_size:
+                        fd, x, v, s = input_fn()
+                        ya, yb = self.session.run([self.network_a.output, self.network_b.output], feed_dict=fd)
+                        y = ya if left else yb
+                        if np.sum(np.abs(np.subtract(ya, yb))) < 0.1:
+                            y[0][0] = np.clip(y[0][0] + np.random.normal(0, 0.25), -1, 1)
+                            y[0][1] = np.clip(y[0][1] + np.random.normal(0, 0.25), -1, 1)
+                        output_fn(y)
+                        buffer.add_item([x, v, y[0], left, s])
+                        left = not left
+                    for i in buffer.clear_buffer():
+                        if i[3]:
+                            array_b.append(i)
+                        else:
+                            array_a.append(i)
+                    np.random.shuffle(array_b)
+                    np.random.shuffle(array_a)
+                
+                pre = timer()
+                def get_batch(arr):
+                    x = [u[0] for u in arr[-batch_size:]]
+                    v = [u[1] for u in arr[-batch_size:]]
+                    y = [u[2] for u in arr[-batch_size:]]
+                    s = [u[4] for u in arr[-batch_size:]]
+                    for _ in range(batch_size):
+                        arr.pop()
+                    return x, v, y, s
+                b_a = get_batch(array_a)
+                b_b = get_batch(array_b)
+                _, aloss, step = self.session.run(
+                    [self.network_a.trainer, self.network_a.loss, self.global_step], 
+                    feed_dict=feed_fn(*b_b))
+                _, bloss = self.session.run([self.network_b.trainer, self.network_b.loss], 
+                    feed_dict=feed_fn(*b_a))
+                if step%summary_interval == 0:
+                    summary_writer.add_summary(self.session.run(summary_ops,
+                        feed_dict=feed_fn(b_a[0]+b_b[0], b_a[1]+b_b[1], b_a[2]+b_b[2], b_a[3]+b_b[3])), step)
+                time = 0.9*time + 0.1 *(timer()-pre)
+                if step%10 == 0:
+                    print("Training step: %i, Loss A: %.3f, Loss B: %.3f (%.2f s)"%(step, aloss, bloss, time), end='\r')
+                if timer() - last_save > 1800:
+                    self.saver.save(self.session, self.model_file_name, self.global_step)
+                    last_save = timer()
+        except (KeyboardInterrupt, StopIteration):
+            print("Stopping the training")
+        finally:
+            summary_writer.close()
+
 
 
 class Network():
@@ -94,8 +162,8 @@ class Network():
             self.output = tf.layers.dense(prev_layer, 2, activation=tf.nn.tanh, 
                 use_bias=True, kernel_regularizer=tf.contrib.layers.l2_regularizer(0.00001))
             # Trainers and losses here
-            self.vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=name)
-            if example_output is not None:
+            if example_output is not None and weights is not None:
+                self.vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=name)
                 self.loss = tf.reduce_mean(tf.squared_difference(self.output, example_output)*weights) + tf.losses.get_regularization_loss(name)
                 adam = tf.train.AdamOptimizer(1e-5, 0.85)
                 self.trainer = adam.minimize(self.loss, global_step, self.vars)
