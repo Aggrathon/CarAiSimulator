@@ -71,7 +71,7 @@ def get_middle_lane(image, pixel_shift=20):
 
 class score_buffer():
 
-    def __init__(self, length=64, falloff=0.95, min_score_length=32):
+    def __init__(self, length=32, falloff=0.9, min_score_length=20):
         self.length = length
         self.falloff = falloff
         self.min_score_length = min_score_length
@@ -85,7 +85,7 @@ class score_buffer():
         for i, ls in enumerate(self.buffer):
             if i > self.to_score:
                 break
-            ls[-1][0] = ls[-1][0]+(self.falloff**abs(i-4))*item[-1][0]
+            ls[-1][0] = ls[-1][0]+(self.falloff**abs(i-10))*item[-1][0]
         if item[-1][0] == 0:
             for _ in range(min(self.min_score_length, self.to_score)):
                 self.buffer.popleft()

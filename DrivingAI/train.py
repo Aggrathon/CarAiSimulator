@@ -23,7 +23,7 @@ def main():
                 driver.set_action(val[0][0], val[0][1])
             def feed(x_, v_, y_, s_):
                 return {x: x_, v:v_, y:y_, s:s_, training:True}
-            nn.train(inp, out, feed, 16, 50000)  
+            nn.train(inp, out, feed, 32, 50000)  
 
 
 if __name__ == "__main__":
