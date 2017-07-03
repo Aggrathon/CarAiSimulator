@@ -1,6 +1,5 @@
 ﻿
 using UnityEngine;
-using UnityEngine.UI;
 using System.Threading;
 using System.Net.Sockets;
 
@@ -12,30 +11,31 @@ public class CommunicationManager : MonoBehaviour {
 	const byte SIMULATOR_DRIVE = 31;
 
 	public CarSteering car;
-	public GameObject reconnectButton;
-	public Toggle fastForwardButton;
-	public float connectionTimeout = 20;
+	public GameObject connectButton;
+	public GameObject disconnectButton;
+	public float connectionTimeout = 30;
 	public RenderTexture cameraView;
 	public TrackManager track;
 	public Speedometer speedometer;
 	[Range(0f,1f)]
 	public float sendInterval = 0.1f;
-	[Range(1f, 20f)]
-	public float fastForwardSpeed = 5f;
 
 	Thread thread;
 	byte[] buffer;
 	Texture2D texture;
+
 	bool requireTexture;
+	bool setupFastForward;
+	bool toggleTimePause;
+	bool endThread;
+
 	float lastSend;
 	int imageSize;
-	bool setupFastForward;
 	int layer;
 
 	void OnEnable () {
-		reconnectButton.SetActive(false);
-		fastForwardButton.isOn = false;
-		fastForwardButton.gameObject.SetActive(false);
+		connectButton.SetActive(false);
+		disconnectButton.SetActive(true);
 		if (buffer == null) buffer = new byte[BUFFER_SIZE];
 		if (thread != null && thread.IsAlive) thread.Abort();
 		if (texture == null) texture = new Texture2D(cameraView.width, cameraView.height);
@@ -43,127 +43,47 @@ public class CommunicationManager : MonoBehaviour {
 		layer = 0;
 		requireTexture = false;
 		setupFastForward = false;
-		DisableFastForward();
+		TimeManager.SetFastForwardPossible(false);
+		endThread = false;
 		thread = new Thread(Thread);
 		thread.Start();
 	}
 
 	private void OnDisable()
 	{
-		DisableFastForward();
-		if (thread != null && thread.IsAlive)
+		connectButton.SetActive(true);
+		disconnectButton.SetActive(false);
+		TimeManager.SetFastForwardPossible(false);
+		if (thread != null)
 		{
-			thread.Abort();
-			while (thread != null) ;
+			endThread = true;
 		}
 	}
-
-	private void OnDestroy()
-	{
-		if (thread != null && thread.IsAlive) {
-			thread.Abort();
-			while (thread != null) ;
-		}
-	}
-
 	private void Update()
 	{
-		if(requireTexture && Time.timeScale > 0 && (layer != 0 ||  lastSend < Time.time))
-		{
-			switch (layer)
-			{
-				case 1:
-					for (int i = 0; i < texture.width; i++)
-					{
-						for (int j = 0; j < texture.height; j++)
-						{
-							Color32 c = texture.GetPixel(i, j);
-							int index = 4 * (i + texture.width * j);
-							buffer[index] = c.r;
-						}
-					}
-					layer++;
-					break;
-				case 2:
-					for (int i = 0; i < texture.width; i++)
-					{
-						for (int j = 0; j < texture.height; j++)
-						{
-							Color32 c = texture.GetPixel(i, j);
-							int index = 4 * (i + texture.width * j);
-							buffer[index + 1] = c.g;
-							buffer[index + 3] = c.a;
-						}
-					}
-					layer++;
-					break;
-				case 3:
-					for (int i = 0; i < texture.width; i++)
-					{
-						for (int j = 0; j < texture.height; j++)
-						{
-							Color32 c = texture.GetPixel(i, j);
-							int index = 4 * (i + texture.width * j);
-							buffer[index + 2] = c.b;
-						}
-					}
-					layer++;
-					break;
-				case 4:
-					for (int i = 0; i < texture.width; i++)
-					{
-						for (int j = 0; j < texture.height; j++)
-						{
-							Color32 c = texture.GetPixel(i, j);
-							int index = 4 * (i + texture.width * j);
-							buffer[index + 3] = c.a;
-						}
-					}
-					layer = 0;
-					requireTexture = false;
-					Destroy(texture);
-					break;
-				default:
-					RenderTexture.active = cameraView;
-					texture = new Texture2D(cameraView.width, cameraView.height);
-					texture.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0);
-					texture.Apply();
-					layer = 1;
-					lastSend = Time.time + sendInterval;
-					buffer[imageSize * 4 + 0] = (byte)((track.directionVector.x + 1) * 127.5f);
-					buffer[imageSize * 4 + 1] = (byte)((track.directionVector.y + 1) * 127.5f);
-					buffer[imageSize * 4 + 2] = (byte)(speedometer.speed * 3 + 100);
-					buffer[imageSize * 4 + 3] = (byte)(car.horizontalSteering * 127.5f + 127.5f);
-					buffer[imageSize * 4 + 4] = (byte)(car.verticalSteering * 127.5f + 127.5f);
-					buffer[imageSize * 4 + 5] = (byte)(track.score * 255f);
-					break;
-			}
-		}
-		else if (setupFastForward)
-		{
-			fastForwardButton.gameObject.SetActive(true);
-			fastForwardButton.onValueChanged.RemoveAllListeners();
-			fastForwardButton.onValueChanged.AddListener((v) =>
-			{
-				if (v)
-					EnableFastForward();
-				else
-					DisableFastForward();
-			});
-			setupFastForward = false;
-			if (SystemInfo.graphicsDeviceID == 0)
-				EnableFastForward();
-			else
-				DisableFastForward();
-		}
 		if (thread == null || !thread.IsAlive)
 		{
 			if (!car.userInput) car.userInput = true;
-			reconnectButton.SetActive(true);
 			enabled = false;
 			thread = null;
-			fastForwardButton.gameObject.SetActive(false);
-			DisableFastForward();
+			return;
+		}
+		if (requireTexture)
+		{
+			FillStatusBuffer();
+		}
+		else if (setupFastForward)
+		{
+			TimeManager.SetFastForwardPossible(true);
+			setupFastForward = false;
+		}
+		else if (toggleTimePause)
+		{
+			toggleTimePause = false;
+			if (Time.timeScale > 0)
+				TimeManager.Pause();
+			else
+				TimeManager.Play();
 		}
 	}
 
@@ -179,9 +99,10 @@ public class CommunicationManager : MonoBehaviour {
 				case SIMULATOR_RECORD:
 					car.userInput = true;
 					while (car.verticalSteering == 0f) ;
-					while (true)
+					while (!endThread)
 					{
-						FillStatusBuffer();
+						requireTexture = true;
+						while (requireTexture) ;
 						if (socket.Send(buffer, imageSize * 4 + 6, SocketFlags.None) == 0)
 							break;
 						if (socket.Receive(buffer) == 0)
@@ -191,9 +112,10 @@ public class CommunicationManager : MonoBehaviour {
 				case SIMULATOR_DRIVE:
 					setupFastForward = true;
 					car.userInput = false;
-					while (true)
+					while (!endThread)
 					{
-						FillStatusBuffer();
+						requireTexture = true;
+						while (requireTexture) ;
 						if (socket.Send(buffer, imageSize * 4 + 6, SocketFlags.None) == 0)
 							break;
 						int size = socket.Receive(buffer);
@@ -228,32 +150,73 @@ public class CommunicationManager : MonoBehaviour {
 
 	void FillStatusBuffer()
 	{
-		requireTexture = true;
-		while (requireTexture);
-	}
-
-
-	void EnableFastForward()
-	{
-		if (!fastForwardButton.isOn)
-			fastForwardButton.isOn = true;
-		if (Time.timeScale > 0)
-			Time.timeScale = fastForwardSpeed;
-		QualitySettings.vSyncCount = 0;
-		Time.fixedDeltaTime = 0.02f / fastForwardSpeed;
-		Camera.main.rect = new Rect(0.4f, 0.4f, 0.2f, 0.2f);
-		AudioListener.pause = true;
-	}
-
-	void DisableFastForward()
-	{
-		if(fastForwardButton.isOn)
-			fastForwardButton.isOn = false;
-		if (Time.timeScale > 0)
-			Time.timeScale = 1;
-		Time.fixedDeltaTime = 0.01f;
-		if(Camera.main)
-			Camera.main.rect = new Rect(0, 0, 1, 1);
-		AudioListener.pause = false;
+		if (Time.timeScale == 0 || (layer == 0 && lastSend >= Time.time))
+			return;
+		switch (layer)
+		{
+			case 1:
+				for (int i = 0; i < texture.width; i++)
+				{
+					for (int j = 0; j < texture.height; j++)
+					{
+						Color32 c = texture.GetPixel(i, j);
+						int index = 4 * (i + texture.width * j);
+						buffer[index] = c.r;
+					}
+				}
+				layer++;
+				break;
+			case 2:
+				for (int i = 0; i < texture.width; i++)
+				{
+					for (int j = 0; j < texture.height; j++)
+					{
+						Color32 c = texture.GetPixel(i, j);
+						int index = 4 * (i + texture.width * j);
+						buffer[index + 1] = c.g;
+						buffer[index + 3] = c.a;
+					}
+				}
+				layer++;
+				break;
+			case 3:
+				for (int i = 0; i < texture.width; i++)
+				{
+					for (int j = 0; j < texture.height; j++)
+					{
+						Color32 c = texture.GetPixel(i, j);
+						int index = 4 * (i + texture.width * j);
+						buffer[index + 2] = c.b;
+					}
+				}
+				layer++;
+				break;
+			case 4:
+				for (int i = 0; i < texture.width; i++)
+				{
+					for (int j = 0; j < texture.height; j++)
+					{
+						Color32 c = texture.GetPixel(i, j);
+						int index = 4 * (i + texture.width * j);
+						buffer[index + 3] = c.a;
+					}
+				}
+				layer = 0;
+				requireTexture = false;
+				break;
+			default:
+				RenderTexture.active = cameraView;
+				texture.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0);
+				texture.Apply();
+				layer = 1;
+				lastSend = Time.time + sendInterval;
+				buffer[imageSize * 4 + 0] = (byte)((track.directionVector.x + 1) * 127.5f);
+				buffer[imageSize * 4 + 1] = (byte)((track.directionVector.y + 1) * 127.5f);
+				buffer[imageSize * 4 + 2] = (byte)(speedometer.speed * 3 + 100);
+				buffer[imageSize * 4 + 3] = (byte)(car.horizontalSteering * 127.5f + 127.5f);
+				buffer[imageSize * 4 + 4] = (byte)(car.verticalSteering * 127.5f + 127.5f);
+				buffer[imageSize * 4 + 5] = (byte)(track.score * 255f);
+				break;
+		}
 	}
 }

@@ -4,6 +4,9 @@ from communication import Driver
 from data import IMAGE_DEPTH, IMAGE_HEIGHT, IMAGE_WIDTH, VARIABLE_COUNT, get_middle_lane
 
 
+def input_queuer():
+    pass
+
 def main():
     tf.logging.set_verbosity(tf.logging.INFO)
     x = tf.placeholder(tf.float32, [None, IMAGE_DEPTH*IMAGE_HEIGHT*IMAGE_WIDTH], "image")

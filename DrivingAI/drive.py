@@ -11,7 +11,7 @@ def main():
     nn = DoubleNetwork(get_middle_lane(tf.reshape(imgs, [-1, 200, 60, 4])), vars, None, None, False)
     with Driver() as driver:
         def inp():
-            x, v, y = driver.get_status()
+            x, v, y, s = driver.get_status()
             return {imgs: [x], vars: [v]}
         def out(val):
             h, v = val[0]

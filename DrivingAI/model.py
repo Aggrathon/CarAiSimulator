@@ -15,10 +15,7 @@ class DoubleNetwork():
         self.global_step = tf.Variable(0, name='global_step')
         self.network_a = Network(images, variables, outputs, training, global_step=self.global_step, name="Network_A")
         self.network_b = Network(images, variables, outputs, training, name="Network_B")
-        if training is not None and training is not False:
-            self.saver = tf.train.Saver()
-        else:
-            self.saver = None
+        self.saver = tf.train.Saver()
         self.session = tf.Session()
         self.coord = tf.train.Coordinator()
         tf.train.start_queue_runners(self.session, self.coord)
@@ -37,7 +34,7 @@ class DoubleNetwork():
         return self
 
     def __exit__(self, type, value, traceback):
-        if self.saver is not None:
+        if training is not None and training is not False:
             self.saver.save(self.session, self.model_file_name, self.global_step)
         self.coord.request_stop()
         self.coord.join()

@@ -42,7 +42,7 @@ public class TrackManager : MonoBehaviour {
 			float score = resetTime <= 0 ? 1 - scoreBalanceResetDistance : 0;
 			float speed = Mathf.Min(targetSpeed, forward * 3.6f) / targetSpeed;
 			score += (1-(1-speed)*(1-speed)) * scoreBalanceResetDistance;
-			return score * 0.9f + 0.1f;
+			return score * 0.99f + 0.01f;
 		}
 	}
 
@@ -56,16 +56,16 @@ public class TrackManager : MonoBehaviour {
 	[ContextMenu("Generate Track")]
 	public void GenerateTrack()
 	{
-		Time.timeScale = 0f;
+		TimeManager.Pause();
 		waitForGenerationScreen.SetActive(true);
 		terrain.Generate();
 		road.onGenerated = () =>
 		{
-			Time.timeScale = 1f;
 			waitForGenerationScreen.SetActive(false);
 			checkpoint = 0;
 			progressionBar.maxValue = road.road.Count;
 			ResetCar();
+			TimeManager.Play();
 		};
 	}
 
