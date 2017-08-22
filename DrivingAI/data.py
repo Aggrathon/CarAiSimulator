@@ -73,41 +73,58 @@ def get_middle_lane(image, pixel_shift=PIXEL_SHIFT):
 
 class score_buffer():
 
-    def __init__(self, length=32, falloff=0.9, min_score_length=20):
+    def __init__(self, length=32, falloff=0.9, min_score_length=20, peak=9):
         self.length = length
         self.falloff = falloff
         self.min_score_length = min_score_length
+        self.peak = peak
         self.buffer = deque()
         self.to_score = 0
         self.sum = 0
+        self.weights = []
         for i in range(length):
-            self.sum = self.sum + falloff**i
-    
-    def add_item(self, item):
-        for i, ls in enumerate(self.buffer):
-            if i > self.to_score:
-                break
-            ls[-1][0] = ls[-1][0]+(self.falloff**abs(i-10))*item[-1][0]
-        if item[-1][0] == 0:
-            for _ in range(min(self.min_score_length, self.to_score)):
+            self.weights.append(falloff**abs(i-self.peak))
+            self.sum = self.sum + self.weights[i]
+        self.scale = 1.0/self.sum
+
+    def add_item(self, *values, score):
+        if score < -1:
+            # The car has been reset
+            rem = min(self.to_score, self.min_score_length)
+            for _ in range(rem):
                 self.buffer.popleft()
-            self.buffer.appendleft(item)
-            self.to_score = 1
+            for i, ls in enumerate(self.buffer):
+                if i > self.to_score - rem:
+                    break
+                ls[-2] = ls[-2] - self.sum*0.5
+            self.to_score = 0
+            item = list((*values, score, False))
         else:
-            item[-1][0] = 0
-            self.buffer.appendleft(item)
-            self.to_score = min(self.to_score + 1, self.length)
-    
+            item = list((*values, score, score<0))
+            for i, ls in enumerate(self.buffer):
+                if i > self.to_score:
+                    break
+                if ls[-1] and score > 0:
+                    for j in range(i):
+                        ls[-2] = ls[-2] + self.weights[j]*1.5
+                    ls[-1] = False
+                ls[-2] = ls[-2] + self.weights[i] * score
+        self.buffer.appendleft(item)
+        self.to_score = min(self.to_score + 1, self.length-1)
+
     def get_items(self):
         while len(self.buffer) > self.to_score:
-            yield self.buffer.pop()
-    
+            item = self.buffer.pop()
+            item.pop()
+            item[-1] = item[-1] * self.scale
+            yield item
+
     def clear_buffer(self):
         self.to_score = min(self.to_score, self.min_score_length)
         for i in self.get_items():
             yield i
         self.buffer.clear()
         self.to_score = 0
-    
+
     def get_num_scored(self):
         return len(self.buffer) - self.to_score

@@ -16,6 +16,7 @@ public class CommunicationManager : MonoBehaviour {
 	public float connectionTimeout = 30;
 	public RenderTexture cameraView;
 	public TrackManager track;
+	public ScoreManager score;
 	public Speedometer speedometer;
 	[Range(0f,1f)]
 	public float sendInterval = 0.1f;
@@ -28,6 +29,7 @@ public class CommunicationManager : MonoBehaviour {
 	bool setupFastForward;
 	bool toggleTimePause;
 	bool endThread;
+	bool hasReset;
 
 	float lastSend;
 	int imageSize;
@@ -45,12 +47,17 @@ public class CommunicationManager : MonoBehaviour {
 		setupFastForward = false;
 		TimeManager.SetFastForwardPossible(false);
 		endThread = false;
+
+		track.onReset += OnReset;
+		hasReset = false;
+
 		thread = new Thread(Thread);
 		thread.Start();
 	}
 
 	private void OnDisable()
 	{
+		track.onReset -= OnReset;
 		connectButton.SetActive(true);
 		disconnectButton.SetActive(false);
 		TimeManager.SetFastForwardPossible(false);
@@ -59,6 +66,12 @@ public class CommunicationManager : MonoBehaviour {
 			endThread = true;
 		}
 	}
+
+	private void OnReset()
+	{
+		hasReset = true;
+	}
+
 	private void Update()
 	{
 		if (thread == null || !thread.IsAlive)
@@ -210,12 +223,18 @@ public class CommunicationManager : MonoBehaviour {
 				texture.Apply();
 				layer = 1;
 				lastSend = Time.time + sendInterval;
-				buffer[imageSize * 4 + 0] = (byte)((track.directionVector.x + 1) * 127.5f);
-				buffer[imageSize * 4 + 1] = (byte)((track.directionVector.y + 1) * 127.5f);
+				buffer[imageSize * 4 + 0] = (byte)((track.localWaypointDirection.x + 1) * 127.5f);
+				buffer[imageSize * 4 + 1] = (byte)((track.localWaypointDirection.y + 1) * 127.5f);
 				buffer[imageSize * 4 + 2] = (byte)(speedometer.speed * 3 + 100);
 				buffer[imageSize * 4 + 3] = (byte)(car.horizontalSteering * 127.5f + 127.5f);
 				buffer[imageSize * 4 + 4] = (byte)(car.verticalSteering * 127.5f + 127.5f);
-				buffer[imageSize * 4 + 5] = (byte)(track.score * 255f);
+				if (hasReset)
+				{
+					buffer[imageSize * 4 + 5] = (byte)0;
+					hasReset = false;
+				}
+				else
+					buffer[imageSize * 4 + 5] = (byte)(score.currentScore * 127 + 128);
 				break;
 		}
 	}

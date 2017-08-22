@@ -1956,6 +1956,7 @@ GameObject:
   - component: {fileID: 1244140417}
   - component: {fileID: 1244140419}
   - component: {fileID: 1244140420}
+  - component: {fileID: 1244140421}
   m_Layer: 0
   m_Name: MANAGER
   m_TagString: Untagged
@@ -1984,8 +1985,6 @@ MonoBehaviour:
   resetTimeout: 10
   waypointDistance: 100
   generateOnLoad: 1
-  scoreBalanceResetDistance: 0.4
-  targetSpeed: 100
 --- !u!4 &1244140418
 Transform:
   m_ObjectHideFlags: 0
@@ -2016,6 +2015,7 @@ MonoBehaviour:
   connectionTimeout: 20
   cameraView: {fileID: 8400000, guid: 20fc137371cb95348aa78bed0dd71491, type: 2}
   track: {fileID: 1244140417}
+  score: {fileID: 1244140421}
   speedometer: {fileID: 150750000}
   sendInterval: 0.2
 --- !u!114 &1244140420
@@ -2031,6 +2031,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   fastSpeed: 5
   fastForwardButton: {fileID: 1381507531}
+--- !u!114 &1244140421
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1244140416}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d8c29e29d312fc4d83523b8d8e9220d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetSpeed: 100
+  resetPenalty: 10
 --- !u!1 &1264629776
 GameObject:
   m_ObjectHideFlags: 0

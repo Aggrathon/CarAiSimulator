@@ -44,15 +44,15 @@ def drive_b(image_tensor, variable_tensor, input_fn, output_fn):
 def main():
     tf.logging.set_verbosity(tf.logging.INFO)
     with Driver() as driver:
+        imgs = tf.placeholder(tf.float32, [None, 200*60*4])
+        vars = tf.placeholder(tf.float32, [None, 3])
         def inp():
             x, v, y, s = driver.get_status()
-            return {imgs: [x], vars: [v]}
+            return { imgs: [x], vars: [v] }
         def out(val):
             h, v = val[0]
             print("Driving  |  h: %+.2f  v: %+.2f"%(h,v))
             driver.set_action(h, v)
-        imgs = tf.placeholder(tf.float32, [None, 200*60*4])
-        vars = tf.placeholder(tf.float32, [None, 3])
         drive_a(get_middle_lane(tf.reshape(imgs, [-1, 200, 60, 4])), vars, inp, out)
 
 if __name__ == "__main__":

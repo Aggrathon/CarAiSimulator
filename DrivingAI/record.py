@@ -13,9 +13,9 @@ def record_data(data_queue):
             data = comm.get_status()
             comm.send_heartbeat()
             while data is not None and len(data) > 0:
-                buffer.add_item(list(data))
+                buffer.add_item(*data[:-1], score=data[-1])
                 for i in buffer.get_items():
-                    i[-1] = i[-1]*0.5+0.5
+                    i[-1] = i[-1]*0.6+0.4
                     data_queue.put(i)
                 counter += 1
                 print("Snapshots recieved:",counter, end='\r')

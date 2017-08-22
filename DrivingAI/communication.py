@@ -56,7 +56,7 @@ class Recorder(Communicator):
             (float(data[-4])-100)/3 #speed
         ]
         steer = [float(data[-3])/127.5-1, float(data[-2])/127.5-1]
-        score = [float(data[-1])/255]
+        score = float(data[-1]-1)/127-1
         return image, variables, steer, score
         
     def get_status(self):
