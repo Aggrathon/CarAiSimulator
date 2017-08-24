@@ -1,7 +1,7 @@
 import tensorflow as tf
 from model import Session, get_network
 from communication import Driver
-from data import get_middle_lane, VARIABLE_COUNT
+from data import VARIABLE_COUNT, IMAGE_DEPTH, IMAGE_HEIGHT, IMAGE_WIDTH
 
 
 def drive_alternating(image_tensor, variable_tensor, input_fn, output_fn):
@@ -44,7 +44,7 @@ def drive_b(image_tensor, variable_tensor, input_fn, output_fn):
 def main():
     tf.logging.set_verbosity(tf.logging.INFO)
     with Driver() as driver:
-        imgs = tf.placeholder(tf.float32, [None, 200*60*4])
+        imgs = tf.placeholder(tf.float32, [None, IMAGE_WIDTH*IMAGE_HEIGHT*IMAGE_DEPTH])
         vars = tf.placeholder(tf.float32, [None, VARIABLE_COUNT])
         def inp():
             x, v, y, s = driver.get_status()
@@ -53,7 +53,7 @@ def main():
             h, v = val[0]
             print("Driving  |  h: %+.2f  v: %+.2f"%(h,v))
             driver.set_action(h, v)
-        drive_a(get_middle_lane(tf.reshape(imgs, [-1, 200, 60, 4])), vars, inp, out)
+        drive_a(tf.reshape(imgs, [-1, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_DEPTH]), vars, inp, out)
 
 if __name__ == "__main__":
     main()

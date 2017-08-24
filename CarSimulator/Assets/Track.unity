@@ -531,7 +531,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 54}
+  m_SizeDelta: {x: 0, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &154245004
 MonoBehaviour:
@@ -1217,7 +1217,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effect: {fileID: 2100000, guid: 08192cf2bf7ac19448e29a619b106067, type: 2}
-  speedometer: {fileID: 150750000}
+  car: {fileID: 0}
 --- !u!1 &680253526
 GameObject:
   m_ObjectHideFlags: 0
@@ -1227,6 +1227,7 @@ GameObject:
   m_Component:
   - component: {fileID: 680253527}
   - component: {fileID: 680253528}
+  - component: {fileID: 680253530}
   - component: {fileID: 680253529}
   m_Layer: 8
   m_Name: Camera
@@ -1241,13 +1242,13 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 680253526}
-  m_LocalRotation: {x: 0.3420201, y: 0, z: 0, w: 0.9396927}
-  m_LocalPosition: {x: 0, y: 4, z: 1}
+  m_LocalRotation: {x: 0.17364816, y: 0, z: 0, w: 0.9848078}
+  m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1401683645}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 40, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 20, y: 0, z: 0}
 --- !u!20 &680253528
 Camera:
   m_ObjectHideFlags: 0
@@ -1266,7 +1267,7 @@ Camera:
     height: 1
   near clip plane: 0.5
   far clip plane: 600
-  field of view: 90
+  field of view: 70
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -1296,6 +1297,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effect: {fileID: 2100000, guid: d257f521016298b4cbadd1741b02879d, type: 2}
+--- !u!114 &680253530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 680253526}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f9dbe898b5010e46bd3785cd29e8341, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lr: {fileID: 1056865248}
+  colors:
+  - {r: 1, g: 0.45882356, b: 0, a: 0.8627451}
+  - {r: 0.6836686, g: 0.36559254, b: 0.7205882, a: 0.627451}
+  - {r: 0.6836686, g: 0.36559254, b: 0.7205882, a: 0.627451}
+  - {r: 0.6836686, g: 0.36559254, b: 0.7205882, a: 0.2509804}
+  mat: {fileID: 2100000, guid: 7cff56f7ac2d2604eabff04a0d31542d, type: 2}
 --- !u!1 &768481512
 GameObject:
   m_ObjectHideFlags: 0
@@ -1710,7 +1729,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1056865249}
   - component: {fileID: 1056865248}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: GPS Line
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1730,7 +1749,7 @@ LineRenderer:
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3e13a4b36c2345049bb9bebab2351b7c, type: 2}
+  - {fileID: 2100000, guid: 7cff56f7ac2d2604eabff04a0d31542d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1751,28 +1770,34 @@ LineRenderer:
   m_SortingOrder: 10
   m_Positions:
   - {x: 0, y: 0, z: 3}
-  - {x: 0, y: 0, z: 7.65}
-  - {x: 4, y: 2, z: 10}
+  - {x: 0, y: 0, z: 20}
+  - {x: 8, y: 2, z: 30}
   m_Parameters:
     serializedVersion: 2
-    widthMultiplier: 0.3
+    widthMultiplier: 0.4
     widthCurve:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 2
         time: 0
+        value: 0.7446804
+        inSlope: 0.00001514262
+        outSlope: 0.00001514262
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 1
         value: 1
         inSlope: 0
         outSlope: 0
         tangentMode: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
-      m_RotationOrder: 4
+      m_RotationOrder: 0
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 0.6413793, b: 0, a: 1}
-      key1: {r: 0.79374856, g: 0.2416198, b: 0.8014706, a: 1}
-      key2: {r: 0, g: 0.8784314, b: 0, a: 0}
+      key0: {r: 1, g: 0.6413793, b: 0, a: 0.8627451}
+      key1: {r: 0.79374856, g: 0.2416198, b: 0.8014706, a: 0.627451}
+      key2: {r: 0, g: 0.8784314, b: 0, a: 0.39215687}
       key3: {r: 0, g: 0.8784314, b: 0, a: 0}
       key4: {r: 0, g: 0.8784314, b: 0, a: 0}
       key5: {r: 0, g: 0.8784314, b: 0, a: 0}
@@ -1787,8 +1812,8 @@ LineRenderer:
       ctime6: 0
       ctime7: 0
       atime0: 0
-      atime1: 65535
-      atime2: 0
+      atime1: 59266
+      atime2: 65535
       atime3: 0
       atime4: 0
       atime5: 0
@@ -1796,7 +1821,7 @@ LineRenderer:
       atime7: 0
       m_Mode: 0
       m_NumColorKeys: 2
-      m_NumAlphaKeys: 2
+      m_NumAlphaKeys: 3
     numCornerVertices: 4
     numCapVertices: 4
     alignment: 0
@@ -2769,7 +2794,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 54}
+  m_SizeDelta: {x: 0, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1605441149
 MonoBehaviour:

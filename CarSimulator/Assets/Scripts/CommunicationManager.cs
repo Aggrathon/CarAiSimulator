@@ -9,7 +9,7 @@ public class CommunicationManager : MonoBehaviour {
 	const int BUFFER_SIZE = 1 << 18;
 	const byte SIMULATOR_RECORD = 30;
 	const byte SIMULATOR_DRIVE = 31;
-	const byte DISCONNECT = 0;
+	const byte DISCONNECT = 20;
 
 	public CarSteering car;
 	public GameObject connectButton;
@@ -124,7 +124,8 @@ public class CommunicationManager : MonoBehaviour {
 						while (requireTexture) ;
 						if (socket.Send(buffer, statusSize, SocketFlags.None) == 0)
 							break;
-						if (socket.Receive(buffer) == 0)
+						int len = socket.Receive(buffer);
+						if (len == 0 || (len == 1 && buffer[0] == DISCONNECT))
 							break;
 					}
 					break;
@@ -161,6 +162,8 @@ public class CommunicationManager : MonoBehaviour {
 		}
 		finally
 		{
+			buffer[0] = DISCONNECT;
+			socket.Send(buffer, 1, SocketFlags.None);
 			socket.Shutdown(SocketShutdown.Both);
 			socket.Close();
 			thread = null;

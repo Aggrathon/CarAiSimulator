@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 from model import Session, get_network
 from communication import Driver
-from data import IMAGE_DEPTH, IMAGE_HEIGHT, IMAGE_WIDTH, VARIABLE_COUNT, get_middle_lane, score_buffer, get_shuffle_batch
+from data import IMAGE_DEPTH, IMAGE_HEIGHT, IMAGE_WIDTH, VARIABLE_COUNT, score_buffer, get_shuffle_batch
 
 
 def get_input(driver, session, neta, netb, tensor_img, tensor_vars, tensor_out, tensor_weights, tensor_examples, buffer=None, array=None):
@@ -56,7 +56,7 @@ def create_placeholders():
     sp = tf.placeholder(tf.float32, None, "weights")
     batch = tf.placeholder(tf.int32, None, "example_size")
     #reshapes
-    xs = get_middle_lane(tf.reshape(xp, [-1, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_DEPTH]))
+    xs = tf.reshape(xp, [-1, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_DEPTH])
     vs = tf.reshape(vp, [-1, VARIABLE_COUNT])
     ys = tf.reshape(yp, [-1, 2])
     ss = tf.reshape(sp, [-1, 1])

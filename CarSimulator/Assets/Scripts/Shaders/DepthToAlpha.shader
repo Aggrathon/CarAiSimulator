@@ -44,8 +44,9 @@
 			{
 				fixed4 col = tex2D(_MainTex, i.uv);
 			
-				col.a = Linear01Depth(tex2D(_CameraDepthTexture, i.uv));
-				col.a = 1 - col.a*col.a;
+				float dist = Linear01Depth(tex2D(_CameraDepthTexture, i.uv));
+				dist = clamp(1 - dist * 3, 0.0, 1.0);
+				col.a = dist*dist*dist*dist*dist*dist;
 				return col;
 			}
 			ENDCG

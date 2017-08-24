@@ -46,29 +46,9 @@ def read_data(image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT, image_depth=IM
         features['variables'], features['steering'], features['score']
 
 
-def create_lane_variations(image, variables, steering, score, pixel_shift=PIXEL_SHIFT, steering_shift=STEERING_SHIFT):
-    new_width = int(image.get_shape()[0])-2*pixel_shift
-    image = tf.stack([
-        tf.slice(image, [pixel_shift,0,0], [new_width, -1, -1]),
-        tf.slice(image, [2*pixel_shift,0,0], [new_width, -1, -1]),
-        tf.slice(image, [0,0,0], [new_width, -1, -1])
-    ])
-    variables = tf.stack([variables, variables, variables])
-    st_const = tf.constant([steering_shift, 0.0], tf.float32)
-    steering = tf.stack([steering, steering+st_const, steering-st_const])
-    score = tf.stack([score, score, score])
-    return image, variables, steering, score
-
-
-def get_shuffle_batch(batch=16, pixel_shift=PIXEL_SHIFT, steering_shift=STEERING_SHIFT, capacity=8000):
+def get_shuffle_batch(batch=16, capacity=8000):
     with tf.variable_scope("input"):
-        return tf.train.shuffle_batch(
-            tensors=[*create_lane_variations(*read_data(), pixel_shift, steering_shift)],
-            batch_size=batch, capacity=capacity, min_after_dequeue=capacity//8, enqueue_many=True)
-
-def get_middle_lane(image, pixel_shift=PIXEL_SHIFT):
-    new_width = int(image.get_shape()[1])-2*pixel_shift
-    return tf.slice(image, [0, pixel_shift, 0, 0], [-1, new_width, -1, -1])
+        return tf.train.shuffle_batch([*read_data()], batch_size=batch, capacity=capacity, min_after_dequeue=capacity//8, enqueue_many=True)
 
 
 class score_buffer():

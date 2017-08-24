@@ -6,6 +6,7 @@ PORT = 38698
 BUFFER_SIZE = 1 << 18
 SIMULATOR_RECORD = 30
 SIMULATOR_DRIVE = 31
+DISCONNECT = 20
 HEARTBEAT = bytes([1])
 
 class Communicator():
@@ -32,6 +33,7 @@ class Communicator():
             print(e)
     
     def close(self):
+        self.send(bytearray([DISCONNECT]))
         self.socket.close()
     
     def __enter__(self):
@@ -60,7 +62,7 @@ class Recorder(Communicator):
         
     def get_status(self):
         data = self.recieve()
-        if data is None or len(data) == 0:
+        if data is None or len(data) == 0 or (len(data) == 0 and data[0] == DISCONNECT):
             raise StopIteration
             return None
         return Recorder.bytes_to_tensor(data)
@@ -75,14 +77,6 @@ class Driver(Recorder):
     def set_action(self, h, v):
         data = bytes([int((h+1)*127.5), int((v+1)*127.5)])
         self.send(data)
-    
-    def get_score(self):
-        self.get_status()
-        self.send_heartbeat()
-        data = self.recieve()
-        score = int.from_bytes(data, sys.byteorder, signed=True)
-        return score
-        
 
 if __name__ == "__main__":
     with Communicator() as c:

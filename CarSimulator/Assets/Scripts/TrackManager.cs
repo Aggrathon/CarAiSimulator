@@ -144,7 +144,7 @@ public class TrackManager : MonoBehaviour {
 				NextCheckpoint();
 			direction = waypointPosition - car.position;
 		}
-		CalculateGpsPoints(140*Time.deltaTime);
+		CalculateGpsPoints(100*Time.deltaTime);
 	}
 
 	void CalculateGpsPoints(float smoothing=100000)

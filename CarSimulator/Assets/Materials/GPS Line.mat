@@ -7,7 +7,7 @@ Material:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_Name: GPS Line
-  m_Shader: {fileID: 4800000, guid: 6c390b465e9a6984aa8a62e09e9498ea, type: 3}
+  m_Shader: {fileID: 4800000, guid: b26af894a9737da4dbf1ad0ff2aa0f96, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
