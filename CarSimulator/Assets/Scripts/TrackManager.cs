@@ -150,10 +150,12 @@ public class TrackManager : MonoBehaviour {
 	void CalculateGpsPoints(float smoothing=100000)
 	{
 		gpsPoints[0] = car.transform.TransformPoint(gpsOffset);
-		gpsPoints[1] = waypointPosition + Vector3.ClampMagnitude(gpsPoints[0] - waypointPosition, gpsCornerCutting);
-		gpsPoints[1].y = (waypointPosition.y + gpsPoints[1].y)*0.5f;
-		gpsPoints[2] = waypointPosition + Vector3.ClampMagnitude(waypointNext - waypointPosition, gpsCornerCutting);
-		gpsPoints[2].y = (waypointPosition.y + gpsPoints[2].y)*0.5f;
+		Vector3 prev = Vector3.ClampMagnitude(gpsPoints[0] - waypointPosition, gpsCornerCutting);
+		Vector3 next = Vector3.ClampMagnitude(waypointNext - waypointPosition, gpsCornerCutting);
+		prev.y *= 0.25f;
+		next.y *= 0.25f;
+		gpsPoints[1] = waypointPosition + prev + next * 0.25f;
+		gpsPoints[2] = waypointPosition + next + prev * 0.25f;
 		gpsPoints[3] = waypointNext;
 
 		gpsSmoothPoints[0] = gpsPoints[0];

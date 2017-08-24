@@ -1,7 +1,7 @@
 import tensorflow as tf
 from model import Session, get_network
 from communication import Driver
-from data import get_middle_lane
+from data import get_middle_lane, VARIABLE_COUNT
 
 
 def drive_alternating(image_tensor, variable_tensor, input_fn, output_fn):
@@ -45,7 +45,7 @@ def main():
     tf.logging.set_verbosity(tf.logging.INFO)
     with Driver() as driver:
         imgs = tf.placeholder(tf.float32, [None, 200*60*4])
-        vars = tf.placeholder(tf.float32, [None, 3])
+        vars = tf.placeholder(tf.float32, [None, VARIABLE_COUNT])
         def inp():
             x, v, y, s = driver.get_status()
             return { imgs: [x], vars: [v] }

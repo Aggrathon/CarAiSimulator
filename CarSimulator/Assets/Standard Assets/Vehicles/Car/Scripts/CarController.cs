@@ -10,12 +10,6 @@ namespace UnityStandardAssets.Vehicles.Car
         FourWheelDrive
     }
 
-    internal enum SpeedType
-    {
-        MPH,
-        KPH
-    }
-
     public class CarController : MonoBehaviour
     {
         [SerializeField] private CarDriveType m_CarDriveType = CarDriveType.FourWheelDrive;
@@ -30,7 +24,6 @@ namespace UnityStandardAssets.Vehicles.Car
         [SerializeField] private float m_ReverseTorque;
         [SerializeField] private float m_MaxHandbrakeTorque;
         [SerializeField] private float m_Downforce = 100f;
-        [SerializeField] private SpeedType m_SpeedType;
         [SerializeField] private float m_Topspeed = 200;
         [SerializeField] private int NoOfGears = 5;
         [SerializeField] private float m_RevRangeBoundary = 1f;
@@ -50,7 +43,7 @@ namespace UnityStandardAssets.Vehicles.Car
         public bool Skidding { get; private set; }
         public float BrakeInput { get; private set; }
         public float CurrentSteerAngle{ get { return m_SteerAngle; }}
-        public float CurrentSpeed{ get { return m_Rigidbody.velocity.magnitude*2.23693629f; }}
+        public float CurrentSpeed{ get { return m_Rigidbody.velocity.magnitude*3.6f; }}
         public float MaxSpeed{get { return m_Topspeed; }}
         public float Revs { get; private set; }
         public float AccelInput { get; private set; }
@@ -93,7 +86,8 @@ namespace UnityStandardAssets.Vehicles.Car
         // simple function to add a curved bias towards 1 for a value in the 0-1 range
         private static float CurveFactor(float factor)
         {
-            return 1 - (1 - factor)*(1 - factor);
+			float curve = 1 - (1 - factor) * (1 - factor);
+			return curve*0.6f + factor*0.4f;
         }
 
 
@@ -145,7 +139,8 @@ namespace UnityStandardAssets.Vehicles.Car
 
             //Set the steer on the front wheels.
             //Assuming that wheels 0 and 1 are the front wheels.
-            m_SteerAngle = steering*m_MaximumSteerAngle;
+			float speedSteering = 1f - 0.65f*Mathf.Lerp(CurrentSpeed, 0, MaxSpeed);
+			m_SteerAngle = steering * m_MaximumSteerAngle * speedSteering;
             m_WheelColliders[0].steerAngle = m_SteerAngle;
             m_WheelColliders[1].steerAngle = m_SteerAngle;
 
@@ -175,21 +170,8 @@ namespace UnityStandardAssets.Vehicles.Car
         private void CapSpeed()
         {
             float speed = m_Rigidbody.velocity.magnitude;
-            switch (m_SpeedType)
-            {
-                case SpeedType.MPH:
-
-                    speed *= 2.23693629f;
-                    if (speed > m_Topspeed)
-                        m_Rigidbody.velocity = (m_Topspeed/2.23693629f) * m_Rigidbody.velocity.normalized;
-                    break;
-
-                case SpeedType.KPH:
-                    speed *= 3.6f;
-                    if (speed > m_Topspeed)
-                        m_Rigidbody.velocity = (m_Topspeed/3.6f) * m_Rigidbody.velocity.normalized;
-                    break;
-            }
+			if (CurrentSpeed > MaxSpeed)
+				m_Rigidbody.velocity = m_Rigidbody.velocity.normalized * (m_Topspeed / 3.6f);
         }
 
 

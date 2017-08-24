@@ -9,6 +9,7 @@ public class CommunicationManager : MonoBehaviour {
 	const int BUFFER_SIZE = 1 << 18;
 	const byte SIMULATOR_RECORD = 30;
 	const byte SIMULATOR_DRIVE = 31;
+	const byte DISCONNECT = 0;
 
 	public CarSteering car;
 	public GameObject connectButton;
@@ -33,6 +34,7 @@ public class CommunicationManager : MonoBehaviour {
 
 	float lastSend;
 	int imageSize;
+	int statusSize;
 	int layer;
 
 	void OnEnable () {
@@ -60,8 +62,10 @@ public class CommunicationManager : MonoBehaviour {
 	private void OnDisable()
 	{
 		track.onReset -= OnReset;
-		connectButton.SetActive(true);
-		disconnectButton.SetActive(false);
+		if (connectButton)
+			connectButton.SetActive(true);
+		if (disconnectButton)
+			disconnectButton.SetActive(false);
 		TimeManager.SetFastForwardPossible(false);
 		if (thread != null)
 		{
@@ -118,7 +122,7 @@ public class CommunicationManager : MonoBehaviour {
 					{
 						requireTexture = true;
 						while (requireTexture) ;
-						if (socket.Send(buffer, imageSize * 4 + 6, SocketFlags.None) == 0)
+						if (socket.Send(buffer, statusSize, SocketFlags.None) == 0)
 							break;
 						if (socket.Receive(buffer) == 0)
 							break;
@@ -232,11 +236,12 @@ public class CommunicationManager : MonoBehaviour {
 				buffer[index++] = (byte)(car.verticalSteering * 127.5f + 127.5f);
 				if (hasReset)
 				{
-					buffer[imageSize * 4 + 5] = (byte)0;
+					buffer[index++] = (byte)0;
 					hasReset = false;
 				}
 				else
-					buffer[imageSize * 4 + 5] = (byte)(score.currentScore * 127 + 128);
+					buffer[index++] = (byte)(score.currentScore * 127 + 128);
+				statusSize = index;
 				break;
 		}
 	}
