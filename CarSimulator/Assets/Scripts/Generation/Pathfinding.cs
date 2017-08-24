@@ -231,12 +231,13 @@ public class Pathfinding
 			return new Vector2(node.x, node.y);
 		}
 
-		public Vector3 GetPosition(float horizontalScale, float verticalScale, Vector3 offset, int graphMargin)
+		public Vector3 GetLocalPosition(int graphWidth, int graphHeight, int graphMargin)
 		{
 			return new Vector3(
-				(y + graphMargin) * horizontalScale,
-				height * verticalScale,
-				(x + graphMargin) * horizontalScale) + offset;
+				(float)(y + graphMargin) / (float)(graphMargin + graphHeight + graphMargin),
+				height,
+				(float)(x + graphMargin) / (float)(graphMargin + graphWidth + graphMargin)
+			);
 		}
 
 		public int GetTextureX(int graphWidth, int textureWidth, int graphMargin)

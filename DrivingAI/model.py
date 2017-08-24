@@ -73,10 +73,10 @@ class Network():
         with tf.variable_scope(name):
             prev_layer = input_image
             # Convolutions
-            for i, size in enumerate([32, 48, 64, 96, 128]):
+            for i, size in enumerate([32, 64, 128]):
                 with tf.variable_scope('convolution_%d'%i):
                     prev_layer = tf.layers.conv2d(prev_layer, size, 5, 1, 'same', activation=tf.nn.relu)
-                    prev_layer = tf.layers.max_pooling2d(prev_layer, 3, 2, 'same')
+                    prev_layer = tf.layers.max_pooling2d(prev_layer, 3, 2, 'valid')
                     prev_layer = tf.nn.local_response_normalization(prev_layer, 4, 1.0, 1e-4, 0.75)
             # Combine variables
             prev_layer = tf.contrib.layers.flatten(prev_layer)

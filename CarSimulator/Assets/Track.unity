@@ -122,7 +122,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7806635
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1701,6 +1701,122 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1035276759}
+--- !u!1 &1056865247
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1056865249}
+  - component: {fileID: 1056865248}
+  m_Layer: 0
+  m_Name: GPS Line
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!120 &1056865248
+LineRenderer:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1056865247}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 3e13a4b36c2345049bb9bebab2351b7c, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 596145417
+  m_SortingLayer: 1
+  m_SortingOrder: 10
+  m_Positions:
+  - {x: 0, y: 0, z: 3}
+  - {x: 0, y: 0, z: 7.65}
+  - {x: 4, y: 2, z: 10}
+  m_Parameters:
+    serializedVersion: 2
+    widthMultiplier: 0.3
+    widthCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 2
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    colorGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 0.6413793, b: 0, a: 1}
+      key1: {r: 0.79374856, g: 0.2416198, b: 0.8014706, a: 1}
+      key2: {r: 0, g: 0.8784314, b: 0, a: 0}
+      key3: {r: 0, g: 0.8784314, b: 0, a: 0}
+      key4: {r: 0, g: 0.8784314, b: 0, a: 0}
+      key5: {r: 0, g: 0.8784314, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65345
+      ctime2: 65535
+      ctime3: 65535
+      ctime4: 65535
+      ctime5: 65535
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
+    numCornerVertices: 4
+    numCapVertices: 4
+    alignment: 0
+    textureMode: 0
+    generateLightingData: 0
+  m_UseWorldSpace: 1
+  m_Loop: 0
+--- !u!4 &1056865249
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1056865247}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1244140418}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!1 &1095773834
 GameObject:
   m_ObjectHideFlags: 0
@@ -1980,11 +2096,13 @@ MonoBehaviour:
   car: {fileID: 369545833}
   waitForGenerationScreen: {fileID: 1467411504}
   resetText: {fileID: 474324112}
-  directionArrow: {fileID: 7806635}
   progressionBar: {fileID: 1370579769}
   resetTimeout: 10
-  waypointDistance: 100
+  waypointDistance: 40
   generateOnLoad: 1
+  gpsLine: {fileID: 1056865248}
+  gpsOffset: {x: 0, y: 0, z: 3}
+  gpsCornerCutting: 10
 --- !u!4 &1244140418
 Transform:
   m_ObjectHideFlags: 0
@@ -1994,7 +2112,8 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
+  m_Children:
+  - {fileID: 1056865249}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2017,7 +2136,7 @@ MonoBehaviour:
   track: {fileID: 1244140417}
   score: {fileID: 1244140421}
   speedometer: {fileID: 150750000}
-  sendInterval: 0.2
+  sendInterval: 0.15
 --- !u!114 &1244140420
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6589,6 +6708,116 @@ Prefab:
       value: 
       objectReference: {fileID: 13400000, guid: 67db31eead11e8d6d00011d98d76c639,
         type: 2}
+    - target: {fileID: 23668706819125238, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayerID
+      value: -1596189845
+      objectReference: {fileID: 0}
+    - target: {fileID: 23668706819125238, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayer
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 23496911932346320, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayerID
+      value: -1596189845
+      objectReference: {fileID: 0}
+    - target: {fileID: 23496911932346320, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayer
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 23763852187323804, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayerID
+      value: -1596189845
+      objectReference: {fileID: 0}
+    - target: {fileID: 23763852187323804, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayer
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 23508611171296534, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayerID
+      value: -1596189845
+      objectReference: {fileID: 0}
+    - target: {fileID: 23508611171296534, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayer
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 23617335794249802, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayerID
+      value: -1596189845
+      objectReference: {fileID: 0}
+    - target: {fileID: 23617335794249802, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayer
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 199597522870051506, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayerID
+      value: -1596189845
+      objectReference: {fileID: 0}
+    - target: {fileID: 199597522870051506, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayer
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 23768145239639250, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayerID
+      value: -1596189845
+      objectReference: {fileID: 0}
+    - target: {fileID: 23768145239639250, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayer
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 23154710238141664, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayerID
+      value: -1596189845
+      objectReference: {fileID: 0}
+    - target: {fileID: 23154710238141664, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayer
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 23922658133482608, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayerID
+      value: -1596189845
+      objectReference: {fileID: 0}
+    - target: {fileID: 23922658133482608, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayer
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 23627837636188796, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayerID
+      value: -1596189845
+      objectReference: {fileID: 0}
+    - target: {fileID: 23627837636188796, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayer
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 23793614858131346, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayerID
+      value: -1596189845
+      objectReference: {fileID: 0}
+    - target: {fileID: 23793614858131346, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+        type: 2}
+      propertyPath: m_SortingLayer
+      value: 2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0, type: 2}
   m_IsPrefabParent: 0
@@ -6712,7 +6941,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   water: {fileID: 1590125273}
   reflection: {fileID: 505524547}
-  heightPenalty: 560
+  heightPenalty: 600
   numCheckpoints: 20
   roadWidth: 4
   pathFindingSpacing: 30

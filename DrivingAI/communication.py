@@ -52,7 +52,6 @@ class Recorder(Communicator):
     def bytes_to_tensor(cls, data):
         image = [float(i)/255.0 for i in data[:-6]]
         variables = [
-            float(data[-6])/127.5 - 1.0, float(data[-5])/127.5 - 1.0, #direction
             (float(data[-4])-100)/3 #speed
         ]
         steer = [float(data[-3])/127.5-1, float(data[-2])/127.5-1]

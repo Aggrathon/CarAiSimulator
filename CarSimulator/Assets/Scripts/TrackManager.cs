@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,7 +10,6 @@ public class TrackManager : MonoBehaviour {
 	[Space]
 	public GameObject waitForGenerationScreen;
 	public Text resetText;
-	public RectTransform directionArrow;
 	public Slider progressionBar;
 	[Space]
 	[Range(0f, 20f)]
@@ -20,20 +17,30 @@ public class TrackManager : MonoBehaviour {
 	[Range(0f,120f)]
 	public float waypointDistance = 50f;
 	public bool generateOnLoad = false;
+	[Header("GPS")]
+	public LineRenderer gpsLine;
+	public Vector3 gpsOffset;
+	[Range(1f, 15f)]
+	public float gpsCornerCutting = 8f;
 
 	public event Action onReset;
-	public Vector2 localWaypointDirection { get; protected set; }
-	public Vector3 globalWaypointPosition { get; protected set; }
+	public Vector3 waypointPosition { get; protected set; }
+	public Vector3 waypointNext { get; protected set; }
 	public bool isResetting { get; protected set; }
 
 	float resetTime = 0f;
 	int checkpoint = 0;
+	Vector3[] gpsPoints;
+	Vector3[] gpsSmoothPoints;
 
 	void Start () {
 		if (generateOnLoad)
 			GenerateTrack();
 		else
 			ResetCar();
+		gpsLine.positionCount = 4;
+		gpsPoints = new Vector3[4];
+		gpsSmoothPoints = new Vector3[4];
 	}
 
 	[ContextMenu("Generate Track")]
@@ -70,6 +77,7 @@ public class TrackManager : MonoBehaviour {
 			resetTime = 0f;
 			resetText.gameObject.SetActive(false);
 			NextCheckpoint();
+			CalculateGpsPoints();
 		}
 	}
 
@@ -86,7 +94,8 @@ public class TrackManager : MonoBehaviour {
 			checkpoint++;
 			progressionBar.value = checkpoint-1;
 		}
-		globalWaypointPosition = road.road[checkpoint % road.road.Count];
+		waypointPosition = road.road[checkpoint % road.road.Count];
+		waypointNext = road.road[(checkpoint+1) % road.road.Count];
 	}
 
 	void Update () {
@@ -126,23 +135,31 @@ public class TrackManager : MonoBehaviour {
 
 	void CheckTrackProgression()
 	{
-		Vector3 direction = globalWaypointPosition - car.position;
+		Vector3 direction = waypointPosition - car.position;
 		//Check arrival
 		if (Vector3.SqrMagnitude(direction) < waypointDistance * waypointDistance)
 		{
 			if (Vector3.SqrMagnitude(direction) < 0.35f * waypointDistance * waypointDistance
 				|| Vector3.Angle(direction, road.road[(checkpoint + 1) % road.road.Count] - car.position) < 30)
 				NextCheckpoint();
-			direction = globalWaypointPosition - car.position;
+			direction = waypointPosition - car.position;
 		}
-		//Set compass
-		float directionAngle = Vector3.SignedAngle(car.transform.forward, direction, Vector3.up);
-		directionArrow.rotation = Quaternion.Euler(0, 0, -directionAngle);
-		//Calculate local direction
-		direction = car.transform.InverseTransformDirection(direction);
-		if (direction.sqrMagnitude == 0)
-			localWaypointDirection = direction;
-		else
-			localWaypointDirection = direction.normalized;
+		CalculateGpsPoints(140*Time.deltaTime);
+	}
+
+	void CalculateGpsPoints(float smoothing=100000)
+	{
+		gpsPoints[0] = car.transform.TransformPoint(gpsOffset);
+		gpsPoints[1] = waypointPosition + Vector3.ClampMagnitude(gpsPoints[0] - waypointPosition, gpsCornerCutting);
+		gpsPoints[1].y = (waypointPosition.y + gpsPoints[1].y)*0.5f;
+		gpsPoints[2] = waypointPosition + Vector3.ClampMagnitude(waypointNext - waypointPosition, gpsCornerCutting);
+		gpsPoints[2].y = (waypointPosition.y + gpsPoints[2].y)*0.5f;
+		gpsPoints[3] = waypointNext;
+
+		gpsSmoothPoints[0] = gpsPoints[0];
+		for (int i = 1; i < gpsPoints.Length; i++)
+			gpsSmoothPoints[i] = Vector3.MoveTowards(gpsSmoothPoints[i], gpsPoints[i], smoothing);
+		gpsLine.SetPositions(gpsSmoothPoints);
+
 	}
 }

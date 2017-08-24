@@ -34,6 +34,20 @@ public class RoadGenerator : MonoBehaviour {
 		terrain = GetComponent<Terrain>();
 	}
 
+	private void OnDrawGizmosSelected()
+	{
+		if (road != null || road.Count > 1)
+		{
+			Gizmos.color = Color.magenta;
+			for (int i = 1; i < road.Count; i++)
+			{
+				Gizmos.DrawLine(road[i - 1], road[i]);
+			}
+			Gizmos.DrawLine(road[road.Count-1], road[0]);
+		}
+
+	}
+
 	[ContextMenu("Generate")]
 	public void Generate()
 	{
@@ -41,10 +55,10 @@ public class RoadGenerator : MonoBehaviour {
 			thread.Abort();
 		status = null;
 		int heightWidth = terrain.terrainData.heightmapWidth;
-		float heightScaleX = terrain.terrainData.heightmapScale.x;
-		float heightScaleY = terrain.terrainData.heightmapScale.y;
 		int textureWidth = terrain.terrainData.alphamapWidth;
-		Vector3 offset = transform.position;
+		Vector3 terrainSize = terrain.terrainData.size;
+		Vector3 heightmapScale = terrain.terrainData.heightmapScale;
+		Vector3 terrainPosition = transform.position;
 		float waterHeight = water.position.y / terrain.terrainData.heightmapScale.y + 0.03f;
 		finishedGenerating = false;
 		
@@ -76,7 +90,7 @@ public class RoadGenerator : MonoBehaviour {
 				road.Clear();
 				for (int i = 0; i < path.Count; i++)
 				{
-					Vector3 pos = path[i].GetPosition(pathFindingSpacing * heightScaleX, heightScaleY, offset, pathFindingGraphMargin);
+					Vector3 pos = Vector3.Scale(terrainSize, path[i].GetLocalPosition(pathFindingGraphSize, pathFindingGraphSize, pathFindingGraphMargin)) + terrainPosition;
 					if(road.Count < 1 || Vector3.SqrMagnitude(pos-road[road.Count-1]) > 1)
 						road.Add(pos);
 				}

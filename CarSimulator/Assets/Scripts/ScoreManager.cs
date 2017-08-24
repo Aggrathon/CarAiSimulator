@@ -26,7 +26,7 @@ public class ScoreManager : MonoBehaviour {
 			currentScore = manager.isResetting ? -1 : 0;
 			float velocity = manager.car.velocity.magnitude;
 			velocity = Mathf.Max(1 - velocity / targetSpeed, 0);
-			float direction = Vector3.Dot(manager.car.velocity, manager.globalWaypointPosition - manager.car.position);
+			float direction = Vector3.Dot(manager.car.velocity, manager.waypointPosition - manager.car.position);
 			direction = Mathf.Max(1 - direction / targetSpeed, 0);
 			currentScore += 0.5f - 0.5f * velocity * velocity;
 			currentScore += 0.5f - 0.5f * direction * direction;

@@ -53,6 +53,8 @@ public class CommunicationManager : MonoBehaviour {
 
 		thread = new Thread(Thread);
 		thread.Start();
+
+		lastSend = 0;
 	}
 
 	private void OnDisable()
@@ -165,6 +167,7 @@ public class CommunicationManager : MonoBehaviour {
 	{
 		if (Time.timeScale == 0 || (layer == 0 && lastSend >= Time.time))
 			return;
+		int index;
 		switch (layer)
 		{
 			case 1:
@@ -173,7 +176,7 @@ public class CommunicationManager : MonoBehaviour {
 					for (int j = 0; j < texture.height; j++)
 					{
 						Color32 c = texture.GetPixel(i, j);
-						int index = 4 * (i + texture.width * j);
+						index = 4 * (i + texture.width * j);
 						buffer[index] = c.r;
 					}
 				}
@@ -185,7 +188,7 @@ public class CommunicationManager : MonoBehaviour {
 					for (int j = 0; j < texture.height; j++)
 					{
 						Color32 c = texture.GetPixel(i, j);
-						int index = 4 * (i + texture.width * j);
+						index = 4 * (i + texture.width * j);
 						buffer[index + 1] = c.g;
 						buffer[index + 3] = c.a;
 					}
@@ -198,7 +201,7 @@ public class CommunicationManager : MonoBehaviour {
 					for (int j = 0; j < texture.height; j++)
 					{
 						Color32 c = texture.GetPixel(i, j);
-						int index = 4 * (i + texture.width * j);
+						index = 4 * (i + texture.width * j);
 						buffer[index + 2] = c.b;
 					}
 				}
@@ -210,7 +213,7 @@ public class CommunicationManager : MonoBehaviour {
 					for (int j = 0; j < texture.height; j++)
 					{
 						Color32 c = texture.GetPixel(i, j);
-						int index = 4 * (i + texture.width * j);
+						index = 4 * (i + texture.width * j);
 						buffer[index + 3] = c.a;
 					}
 				}
@@ -223,11 +226,10 @@ public class CommunicationManager : MonoBehaviour {
 				texture.Apply();
 				layer = 1;
 				lastSend = Time.time + sendInterval;
-				buffer[imageSize * 4 + 0] = (byte)((track.localWaypointDirection.x + 1) * 127.5f);
-				buffer[imageSize * 4 + 1] = (byte)((track.localWaypointDirection.y + 1) * 127.5f);
-				buffer[imageSize * 4 + 2] = (byte)(speedometer.speed * 3 + 100);
-				buffer[imageSize * 4 + 3] = (byte)(car.horizontalSteering * 127.5f + 127.5f);
-				buffer[imageSize * 4 + 4] = (byte)(car.verticalSteering * 127.5f + 127.5f);
+				index = imageSize * 4;
+				buffer[index++] = (byte)(speedometer.speed * 3 + 100);
+				buffer[index++] = (byte)(car.horizontalSteering * 127.5f + 127.5f);
+				buffer[index++] = (byte)(car.verticalSteering * 127.5f + 127.5f);
 				if (hasReset)
 				{
 					buffer[imageSize * 4 + 5] = (byte)0;
