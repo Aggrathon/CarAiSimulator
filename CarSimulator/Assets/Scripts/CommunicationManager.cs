@@ -136,7 +136,7 @@ public class CommunicationManager : MonoBehaviour {
 					{
 						requireTexture = true;
 						while (requireTexture) ;
-						if (socket.Send(buffer, imageSize * 4 + 6, SocketFlags.None) == 0)
+						if (socket.Send(buffer, statusSize, SocketFlags.None) == 0)
 							break;
 						int size = socket.Receive(buffer);
 						if (size == 2)

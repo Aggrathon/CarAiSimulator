@@ -18,9 +18,9 @@ def get_input(driver, session, neta, netb, tensor_img, tensor_vars, tensor_out, 
             y = session.run(output, feed_dict={ tensor_examples: 0, tensor_img: [x], tensor_vars: [v] })
             y1 = y[0][0]
             y2 = y[0][1]
-            if np.random.uniform() < 0.08:
-                y1 = np.clip(y1 + np.random.normal(0, 0.5), -1, 1)
-                y2 = np.clip(y2 + np.random.normal(0, 0.5), -1, 1)
+            if np.random.uniform() < 0.05:
+                y1 = np.clip(y1 + np.random.normal(0, 0.45), -1, 1)
+                y2 = np.clip(y2 + np.random.normal(0, 0.45), -1, 1)
             driver.set_action(y1, y2)
             buffer.add_item(x, v, [y1, y2], score=s)
         for i in buffer.get_items():
@@ -35,7 +35,7 @@ def get_input(driver, session, neta, netb, tensor_img, tensor_vars, tensor_out, 
     np.random.shuffle(array)
     return array
 
-def get_batch_feed(array, tensor_img, tensor_vars, tensor_output, tensor_weights, tensor_examples, batch=32, example_count=8):
+def get_batch_feed(array, tensor_img, tensor_vars, tensor_output, tensor_weights, tensor_examples, batch=32, example_count=12):
     x = []
     v = []
     y = []
