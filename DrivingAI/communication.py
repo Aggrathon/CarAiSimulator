@@ -52,7 +52,7 @@ class Recorder(Communicator):
     
     @classmethod
     def bytes_to_tensor(cls, data):
-        image = [float(i)/255.0 for i in data[:-6]]
+        image = [float(i)/255.0 for i in data[:-4]]
         variables = [
             (float(data[-4])-100)/3 #speed
         ]

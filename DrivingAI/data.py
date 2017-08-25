@@ -5,12 +5,10 @@ import os
 import datetime
 
 DATA_DIRECTORY = os.path.join('data', 'records')
-IMAGE_WIDTH = 200
+IMAGE_WIDTH = 140
 IMAGE_HEIGHT = 60
 IMAGE_DEPTH = 4
 VARIABLE_COUNT = 1
-PIXEL_SHIFT = 20
-STEERING_SHIFT = 0.1
 
 def write_data(data_queue, id):
     os.makedirs(DATA_DIRECTORY, exist_ok=True)
@@ -48,7 +46,7 @@ def read_data(image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT, image_depth=IM
 
 def get_shuffle_batch(batch=16, capacity=8000):
     with tf.variable_scope("input"):
-        return tf.train.shuffle_batch([*read_data()], batch_size=batch, capacity=capacity, min_after_dequeue=capacity//8, enqueue_many=True)
+        return tf.train.shuffle_batch([*read_data()], batch_size=batch, capacity=capacity, min_after_dequeue=capacity//8)
 
 
 class score_buffer():

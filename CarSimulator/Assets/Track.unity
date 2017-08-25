@@ -1217,7 +1217,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effect: {fileID: 2100000, guid: 08192cf2bf7ac19448e29a619b106067, type: 2}
-  car: {fileID: 0}
+  car: {fileID: 1956639253}
 --- !u!1 &680253526
 GameObject:
   m_ObjectHideFlags: 0
@@ -6536,6 +6536,12 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1945396742}
+--- !u!114 &1956639253 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114019788089198466, guid: 9e6b3b9f70f2fda4d8eafc3910f3d0f0,
+    type: 2}
+  m_PrefabInternal: {fileID: 2029531042}
+  m_Script: {fileID: 11500000, guid: 3ea65b38d485c374caa584a03f1de571, type: 3}
 --- !u!1 &1984801556
 GameObject:
   m_ObjectHideFlags: 0
