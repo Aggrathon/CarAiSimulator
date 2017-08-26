@@ -188,8 +188,8 @@ public class TrackGenerator : MonoBehaviour {
 	{
 		if (alphas == null)
 			return false;
-		int x = (int)((pos.x - terrain.transform.position.x) / size.x * alphas.GetLength(0));
-		int y = (int)((pos.z - terrain.transform.position.z) / size.z * alphas.GetLength(1));
+		int y = (int)((pos.x - terrain.transform.position.x) / size.x * alphas.GetLength(0));
+		int x = (int)((pos.z - terrain.transform.position.z) / size.z * alphas.GetLength(1));
 		return alphas[x, y, ROAD_TEXTURE_INDEX] > 0.5f || alphas[x, y, PAINT_TEXTURE_INDEX] > 0.5f;
 	}
 }
