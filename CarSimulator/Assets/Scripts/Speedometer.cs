@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class Speedometer : MonoBehaviour {
 
-	static string[] cache;
+	string[] cache;
 
 	public Text speedText;
 	public Rigidbody car;
@@ -14,13 +14,16 @@ public class Speedometer : MonoBehaviour {
 
 	private void Start()
 	{
-		if (cache == null)
+		if (cache == null || cache.Length < 251)
+			SetupCache();
+	}
+
+	private void SetupCache()
+	{
+		cache = new string[251];
+		for (int i = 0; i < 251; i++)
 		{
-			cache = new string[251];
-			for (int i = 0; i < 251; i++)
-			{
-				cache[i] = (i - 100) + " km/h";
-			}
+			cache[i] = (i - 100) + " km/h";
 		}
 	}
 

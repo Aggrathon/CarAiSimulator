@@ -68,10 +68,11 @@ public class TrackGenerator : MonoBehaviour {
 		terrainData.alphamapResolution = textureMapResolution;
 		terrainData.heightmapResolution = heightMapResolution;
 		terrainData.size = size;
+		terrainData.thickness = 10;
 		Texture2D[] tex = new Texture2D[] { waterTexture, sandTexture, grassTexture, mountainTexture, roadTexture, paintTexture };
 		terrainData.splatPrototypes = tex.Select(t => { SplatPrototype sp = new SplatPrototype(); sp.texture = t; return sp; }).ToArray<SplatPrototype>();
 		terrain = Terrain.CreateTerrainGameObject(terrainData).GetComponent<Terrain>();
-		terrain.gameObject.isStatic = false;
+		terrain.bakeLightProbesForTrees = false;
 	}
 
 
