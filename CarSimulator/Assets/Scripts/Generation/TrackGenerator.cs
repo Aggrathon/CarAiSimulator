@@ -72,7 +72,6 @@ public class TrackGenerator : MonoBehaviour {
 		Texture2D[] tex = new Texture2D[] { waterTexture, sandTexture, grassTexture, mountainTexture, roadTexture, paintTexture };
 		terrainData.splatPrototypes = tex.Select(t => { SplatPrototype sp = new SplatPrototype(); sp.texture = t; return sp; }).ToArray<SplatPrototype>();
 		terrain = Terrain.CreateTerrainGameObject(terrainData).GetComponent<Terrain>();
-		terrain.bakeLightProbesForTrees = false;
 	}
 
 
@@ -156,7 +155,7 @@ public class TrackGenerator : MonoBehaviour {
 			yield return null;
 		bool roadHeights = true;
 		ThreadPool.QueueUserWorkItem((o) => {
-			roadGenerator.DrawRoadTextures(alphas, size, position);
+			roadGenerator.DrawRoadHeights(heights, size, position, alphas.GetLength(0));
 			roadHeights = false;
 		});
 
@@ -165,7 +164,7 @@ public class TrackGenerator : MonoBehaviour {
 			yield return null;
 		bool roadTextures = true;
 		ThreadPool.QueueUserWorkItem((o) => {
-			roadGenerator.DrawRoadHeights(heights, size, position, alphas.GetLength(0));
+			roadGenerator.DrawRoadTextures(alphas, size, position);
 			roadTextures = false;
 		});
 
