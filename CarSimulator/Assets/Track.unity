@@ -2116,8 +2116,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a945ce508b6f8b40922a68418e55471, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  terrain: {fileID: 2065320137}
-  road: {fileID: 2065320138}
+  track: {fileID: 2065320139}
   car: {fileID: 369545833}
   waitForGenerationScreen: {fileID: 1467411504}
   resetText: {fileID: 474324112}
@@ -6755,8 +6754,7 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 2065320136}
-  - component: {fileID: 2065320135}
-  - component: {fileID: 2065320134}
+  - component: {fileID: 2065320139}
   - component: {fileID: 2065320137}
   - component: {fileID: 2065320138}
   m_Layer: 0
@@ -6766,47 +6764,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!154 &2065320134
-TerrainCollider:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 2065320133}
-  m_Material: {fileID: 0}
-  m_Enabled: 1
-  m_TerrainData: {fileID: 15600000, guid: 1142c7f8da23405419c10d662830a934, type: 2}
-  m_EnableTreeColliders: 1
---- !u!218 &2065320135
-Terrain:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 2065320133}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_TerrainData: {fileID: 15600000, guid: 1142c7f8da23405419c10d662830a934, type: 2}
-  m_TreeDistance: 2000
-  m_TreeBillboardDistance: 50
-  m_TreeCrossFadeLength: 5
-  m_TreeMaximumFullLODCount: 50
-  m_DetailObjectDistance: 80
-  m_DetailObjectDensity: 1
-  m_HeightmapPixelError: 24
-  m_SplatMapDistance: 1000
-  m_HeightmapMaximumLOD: 0
-  m_CastShadows: 1
-  m_DrawHeightmap: 1
-  m_DrawTreesAndFoliage: 1
-  m_ReflectionProbeUsage: 1
-  m_MaterialType: 0
-  m_LegacySpecular:
-    serializedVersion: 2
-    rgba: 4286545791
-  m_LegacyShininess: 0.078125
-  m_MaterialTemplate: {fileID: 0}
-  m_BakeLightProbesForTrees: 0
-  m_ScaleInLightmap: 0.0256
-  m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &2065320136
 Transform:
   m_ObjectHideFlags: 0
@@ -6847,8 +6804,6 @@ MonoBehaviour:
   - scale: 0.3
     height: 0.02
     detail: 1
-  water: {fileID: 1590125273}
-  reflection: {fileID: 505524547}
 --- !u!114 &2065320138
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6860,14 +6815,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34f09667c9b14764983963e12f1cf064, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  water: {fileID: 1590125273}
-  reflection: {fileID: 505524547}
   heightPenalty: 600
   numCheckpoints: 20
   roadWidth: 4
   pathFindingSpacing: 30
-  roadTextureIndex: 4
-  roadMarkerTextureIndex: 6
   road:
   - {x: -85.9375, y: 125.88268, z: 734.375}
   - {x: 109.375, y: 117.49936, z: 734.375}
@@ -7026,6 +6977,29 @@ MonoBehaviour:
   - {x: 31.25, y: 114.03821, z: 851.5625}
   - {x: 109.375, y: 117.49936, z: 734.375}
   - {x: -85.9375, y: 125.88268, z: 734.375}
+--- !u!114 &2065320139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2065320133}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73e10526f76b80241a26f26115936305, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  generateOnStart: 0
+  reflection: {fileID: 505524547}
+  water: {fileID: 1590125273}
+  size: {x: 4000, y: 200, z: 4000}
+  heightMapResolution: 4097
+  textureMapResolution: 2048
+  waterTexture: {fileID: 2800000, guid: ea0d5361fd2c1e141881ac191baf0a88, type: 3}
+  sandTexture: {fileID: 2800000, guid: d2e9db45bfb20664097a6a3d1510694d, type: 3}
+  grassTexture: {fileID: 2800000, guid: bf6d7c6266332f84bb927b6ff31b5aef, type: 3}
+  mountainTexture: {fileID: 2800000, guid: 9d710bda53f258e4a82160f85fbe1319, type: 3}
+  roadTexture: {fileID: 2800000, guid: 4474944ae6ca0744088d9b51a00bc9cd, type: 3}
+  paintTexture: {fileID: 2800000, guid: 929c531d96f1c414281efc0966df8336, type: 3}
 --- !u!1 &2112444752
 GameObject:
   m_ObjectHideFlags: 0

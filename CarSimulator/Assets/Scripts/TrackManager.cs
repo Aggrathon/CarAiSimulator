@@ -4,8 +4,7 @@ using UnityEngine.UI;
 
 public class TrackManager : MonoBehaviour {
 
-	public TerrainGenerator terrain;
-	public RoadGenerator road;
+	public TrackGenerator track;
 	public Rigidbody car;
 	[Space]
 	public GameObject waitForGenerationScreen;
@@ -33,7 +32,9 @@ public class TrackManager : MonoBehaviour {
 	Vector3[] gpsPoints;
 	Vector3[] gpsSmoothPoints;
 
-	void Start () {
+	void Start ()
+	{
+		track.onGenerated += OnTrackGenerated;
 		if (generateOnLoad)
 			GenerateTrack();
 		else
@@ -48,42 +49,47 @@ public class TrackManager : MonoBehaviour {
 	{
 		TimeManager.Pause();
 		waitForGenerationScreen.SetActive(true);
-		terrain.Generate();
-		road.onGenerated = () =>
-		{
-			waitForGenerationScreen.SetActive(false);
-			checkpoint = 0;
-			progressionBar.maxValue = road.road.Count;
-			ResetCar();
-			TimeManager.Play();
-		};
+		//car.isKinematic = true;
+		car.velocity = Vector3.zero;
+		track.Generate();
+	}
+
+	private void OnTrackGenerated()
+	{
+		waitForGenerationScreen.SetActive(false);
+		checkpoint = -1;
+		NextCheckpoint();
+		progressionBar.maxValue = track.road.Count;
+		//car.isKinematic = false;
+		ResetCar();
+		TimeManager.Play();
 	}
 
 	[ContextMenu("Reset Car")]
 	public void ResetCar()
 	{
-		if (checkpoint == road.road.Count)
+		if (checkpoint == track.road.Count)
 			GenerateTrack();
 		else
 		{
 			RaycastHit hit;
-			if (Physics.Raycast(road.road[checkpoint] + new Vector3(0, 3, 0), Vector3.down, out hit, 10))
-				car.MovePosition(hit.point + new Vector3(0, 0.5f, 0));
+			if (Physics.Raycast(waypointPosition + new Vector3(0, 1, 0), Vector3.down, out hit, 10))
+				car.MovePosition(hit.point + new Vector3(0, 0.1f, 0));
 			else
-				car.MovePosition(road.road[checkpoint] + new Vector3(0, 1, 0));
-			car.MoveRotation(Quaternion.LookRotation(road.road[(checkpoint + 1) % road.road.Count] - road.road[checkpoint], Vector3.up));
+				car.MovePosition(waypointPosition + new Vector3(0, 0.1f, 0));
+			NextCheckpoint();
+			car.MoveRotation(Quaternion.LookRotation(waypointPosition - car.position, Vector3.up));
 			car.angularVelocity = Vector3.zero;
-			car.velocity = car.transform.forward;
+			car.velocity = Vector3.zero;
 			resetTime = 0f;
 			resetText.gameObject.SetActive(false);
-			NextCheckpoint();
 			CalculateGpsPoints();
 		}
 	}
 
 	public void NextCheckpoint()
 	{
-		if (checkpoint == road.road.Count)
+		if (checkpoint == track.road.Count)
 		{
 			progressionBar.value = checkpoint;
 			GenerateTrack();
@@ -94,8 +100,8 @@ public class TrackManager : MonoBehaviour {
 			checkpoint++;
 			progressionBar.value = checkpoint-1;
 		}
-		waypointPosition = road.road[checkpoint % road.road.Count];
-		waypointNext = road.road[(checkpoint+1) % road.road.Count];
+		waypointPosition = track.road[checkpoint % track.road.Count];
+		waypointNext = track.road[(checkpoint+1) % track.road.Count];
 	}
 
 	void Update () {
@@ -108,7 +114,7 @@ public class TrackManager : MonoBehaviour {
 
 	void CheckNeedReset()
 	{
-		if (road.IsRoad(car.position) && car.velocity.sqrMagnitude > 1f)
+		if (track.IsRoad(car.position) && car.velocity.sqrMagnitude > 1f)
 		{
 			resetText.gameObject.SetActive(false);
 			resetTime = 0f;
@@ -140,7 +146,7 @@ public class TrackManager : MonoBehaviour {
 		if (Vector3.SqrMagnitude(direction) < waypointDistance * waypointDistance)
 		{
 			if (Vector3.SqrMagnitude(direction) < 0.35f * waypointDistance * waypointDistance
-				|| Vector3.Angle(direction, road.road[(checkpoint + 1) % road.road.Count] - car.position) < 30)
+				|| Vector3.Angle(direction, waypointNext - car.position) < 30)
 				NextCheckpoint();
 			direction = waypointPosition - car.position;
 		}
