@@ -9,7 +9,6 @@ public class TrackManager : MonoBehaviour {
 	[Space]
 	public GameObject waitForGenerationScreen;
 	public Text resetText;
-	public Slider progressionBar;
 	[Space]
 	[Range(0f, 20f)]
 	public float resetTimeout = 10f;
@@ -23,6 +22,7 @@ public class TrackManager : MonoBehaviour {
 	public float gpsCornerCutting = 8f;
 
 	public event Action onReset;
+	public event Action onWaypoint;
 	public Vector3 waypointPosition { get; protected set; }
 	public Vector3 waypointNext { get; protected set; }
 	public bool isResetting { get; protected set; }
@@ -49,7 +49,6 @@ public class TrackManager : MonoBehaviour {
 	{
 		TimeManager.Pause();
 		waitForGenerationScreen.SetActive(true);
-		//car.isKinematic = true;
 		car.velocity = Vector3.zero;
 		track.Generate();
 	}
@@ -58,9 +57,8 @@ public class TrackManager : MonoBehaviour {
 	{
 		waitForGenerationScreen.SetActive(false);
 		checkpoint = -1;
-		NextCheckpoint();
-		progressionBar.maxValue = track.road.Count;
-		//car.isKinematic = false;
+		waypointPosition = track.road[track.road.Count-1];
+		waypointNext = track.road[0];
 		ResetCar();
 		TimeManager.Play();
 	}
@@ -77,13 +75,15 @@ public class TrackManager : MonoBehaviour {
 				car.MovePosition(hit.point + new Vector3(0, 0.1f, 0));
 			else
 				car.MovePosition(waypointPosition + new Vector3(0, 0.1f, 0));
+			car.MoveRotation(Quaternion.LookRotation(waypointNext - waypointPosition, Vector3.up));
 			NextCheckpoint();
-			car.MoveRotation(Quaternion.LookRotation(waypointPosition - car.position, Vector3.up));
 			car.angularVelocity = Vector3.zero;
 			car.velocity = Vector3.zero;
 			resetTime = 0f;
 			resetText.gameObject.SetActive(false);
 			CalculateGpsPoints();
+			if (onReset != null)
+				onReset();
 		}
 	}
 
@@ -91,17 +91,20 @@ public class TrackManager : MonoBehaviour {
 	{
 		if (checkpoint == track.road.Count)
 		{
-			progressionBar.value = checkpoint;
 			GenerateTrack();
 			checkpoint = 0;
+			if (onWaypoint != null)
+				onWaypoint();
+			return;
 		}
 		else
 		{
 			checkpoint++;
-			progressionBar.value = checkpoint-1;
+			waypointPosition = track.road[checkpoint % track.road.Count];
+			waypointNext = track.road[(checkpoint + 1) % track.road.Count];
+			if (onWaypoint != null)
+				onWaypoint();
 		}
-		waypointPosition = track.road[checkpoint % track.road.Count];
-		waypointNext = track.road[(checkpoint+1) % track.road.Count];
 	}
 
 	void Update () {
@@ -131,8 +134,6 @@ public class TrackManager : MonoBehaviour {
 				if(resetTime > resetTimeout)
 				{
 					ResetCar();
-					if (onReset != null)
-						onReset();
 					isResetting = false;
 				}
 			}

@@ -11,24 +11,30 @@ def get_input(driver, session, neta, netb, tensor_img, tensor_vars, tensor_out, 
         buffer = score_buffer()
     if array is None:
         array = []
-    def fill_buffer(output):
-        print("Filling the reinforcement buffer...     ", end='\r')
-        while buffer.get_num_scored() < 200:
-            x, v, y, s = driver.get_status()
+    h = 0
+    v = 1
+    def fill_buffer(output, h,v):
+        while buffer.get_num_scored() < 400:
+            x, v, y, s = driver.drive(h, v)
             y = session.run(output, feed_dict={ tensor_examples: 0, tensor_img: [x], tensor_vars: [v] })
-            y1 = y[0][0]
-            y2 = y[0][1]
-            if np.random.uniform() < 0.05:
-                y1 = np.clip(y1 + np.random.normal(0, 0.45), -1, 1)
-                y2 = np.clip(y2 + np.random.normal(0, 0.45), -1, 1)
-            driver.set_action(y1, y2)
-            buffer.add_item(x, v, [y1, y2], score=s)
+            h = y[0][0]
+            v = y[0][1]
+            if np.random.uniform() < 0.07:
+                h = np.clip(h + np.random.normal(0, 0.4), -1, 1)
+                v = np.clip(v + np.random.normal(0, 0.4), -1, 1)
+            buffer.add_item(x, v, [h, v], score=s)
         for i in buffer.get_items():
             array.append(i)
-            array.append(i)
-    for _ in range(5):
-        fill_buffer(neta.output)
-        fill_buffer(netb.output)
+            if i[-1] > 0:
+                array.append(i)
+        return h, v
+    driver.play()
+    for _ in range(3):
+        print("Filling the reinforcement buffer...     (A)", end='\r')
+        h, v = fill_buffer(neta.output, h, v)
+        print("Filling the reinforcement buffer...     (B)", end='\r')
+        h, v = fill_buffer(netb.output, h, v)
+    driver.pause()
     for i in buffer.clear_buffer():
         array.append(i)
         array.append(i)
@@ -78,17 +84,17 @@ def train(iterations=80000, summary_interval=100, batch=32):
         with Session(True, True, global_step) as sess:
             try:
                 last_save = timer()
-                buffer = score_buffer()
                 array = []
-                step = 1
+                buffer = score_buffer()
+                step = 0
                 time = 1
                 for _ in range(iterations):
-                    if len(array) < batch*2:
+                    if len(array) < batch*4:
                         get_input(driver, sess.session, network_a, network_b, *placeholders[:5], buffer, array)
                     pre = timer()
-                    fd = get_batch_feed(array, *placeholders[:5], batch)
+                    fd = get_batch_feed(array, *placeholders[:5], batch, batch*3//8)
                     _, aloss, step = sess.session.run([network_a.trainer, network_a.loss, global_step], feed_dict=fd)
-                    fd = get_batch_feed(array, *placeholders[:5], batch)
+                    fd = get_batch_feed(array, *placeholders[:5], batch, batch*3//8)
                     _, bloss = sess.session.run([network_b.trainer, network_b.loss], feed_dict=fd)
                     if step%summary_interval == 0:
                         print()

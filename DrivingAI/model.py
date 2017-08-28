@@ -96,7 +96,12 @@ class Network():
             # Trainers and losses here
             if example_output is not None:
                 self.vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=name)
-                self.loss = tf.losses.mean_squared_error(self.output, example_output, weights)
+                if weights is 1.0:
+                    self.loss = tf.losses.mean_squared_error(self.output, example_output)
+                else:
+                    loss_pos = tf.squared_difference(self.output, example_output)*tf.maximum(weights, 0)
+                    loss_neg = (1.0-tf.abs(self.output-example_output))*tf.negative(tf.minimum(weights, 0))
+                    self.loss = tf.reduce_mean(loss_pos + loss_neg*0.05)
                 adam = tf.train.AdamOptimizer(1e-5, 0.85)
                 self.trainer = adam.minimize(self.loss, global_step, self.vars)
                 tf.summary.scalar('Loss', self.loss)

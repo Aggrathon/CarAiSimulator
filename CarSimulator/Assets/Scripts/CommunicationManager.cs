@@ -6,15 +6,17 @@ using System.Net.Sockets;
 public class CommunicationManager : MonoBehaviour {
 
 	const int PORT = 38698;
-	const int BUFFER_SIZE = 1 << 18;
-	const byte SIMULATOR_RECORD = 30;
-	const byte SIMULATOR_DRIVE = 31;
+	const int BUFFER_SIZE = 1 << 16;
+	const byte RECORD = 30;
+	const byte DRIVE = 31;
 	const byte DISCONNECT = 20;
+	const byte PAUSE = 21;
+	const byte PLAY = 22;
+	const byte HEARTBEAT = 1;
 
 	public CarSteering car;
 	public GameObject connectButton;
 	public GameObject disconnectButton;
-	public float connectionTimeout = 30;
 	public RenderTexture cameraView;
 	public TrackManager track;
 	public ScoreManager score;
@@ -27,10 +29,13 @@ public class CommunicationManager : MonoBehaviour {
 	Texture2D texture;
 
 	bool requireTexture;
-	bool setupFastForward;
-	bool toggleTimePause;
+	bool setFastForward;
+	bool unsetFastForward;
+	bool setPause;
+	bool setPlay;
 	bool endThread;
 	bool hasReset;
+	bool hasScored;
 
 	float lastSend;
 	int imageSize;
@@ -46,12 +51,17 @@ public class CommunicationManager : MonoBehaviour {
 		imageSize = texture.width * texture.height;
 		layer = 0;
 		requireTexture = false;
-		setupFastForward = false;
+		setFastForward = false;
+		unsetFastForward = false;
+		setPause = false;
+		setPlay = false;
 		TimeManager.SetFastForwardPossible(false);
 		endThread = false;
 
 		track.onReset += OnReset;
-		hasReset = false;
+		track.onWaypoint += OnScore;
+		hasReset = true;
+		hasScored = false;
 
 		thread = new Thread(Thread);
 		thread.Start();
@@ -62,6 +72,8 @@ public class CommunicationManager : MonoBehaviour {
 	private void OnDisable()
 	{
 		track.onReset -= OnReset;
+		track.onWaypoint -= OnScore;
+		car.userInput = true;
 		if (connectButton)
 			connectButton.SetActive(true);
 		if (disconnectButton)
@@ -78,11 +90,16 @@ public class CommunicationManager : MonoBehaviour {
 		hasReset = true;
 	}
 
+	void OnScore()
+	{
+		hasScored = true;
+	}
+
 	private void Update()
 	{
 		if (thread == null || !thread.IsAlive)
 		{
-			if (!car.userInput) car.userInput = true;
+			car.userInput = true;
 			enabled = false;
 			thread = null;
 			return;
@@ -91,18 +108,25 @@ public class CommunicationManager : MonoBehaviour {
 		{
 			FillStatusBuffer();
 		}
-		else if (setupFastForward)
+		if (setFastForward)
 		{
 			TimeManager.SetFastForwardPossible(true);
-			setupFastForward = false;
+			setFastForward = false;
 		}
-		else if (toggleTimePause)
+		else if (unsetFastForward)
 		{
-			toggleTimePause = false;
-			if (Time.timeScale > 0)
-				TimeManager.Pause();
-			else
-				TimeManager.Play();
+			TimeManager.SetFastForwardPossible(false);
+			unsetFastForward = false;
+		}
+		else if (setPause)
+		{
+			setPause = false;
+			TimeManager.Pause();
+		}
+		else if (setPlay)
+		{
+			setPlay = false;
+			TimeManager.Play();
 		}
 	}
 
@@ -112,46 +136,50 @@ public class CommunicationManager : MonoBehaviour {
 		try
 		{
 			socket.Connect("localhost", PORT);
-			socket.Receive(buffer);
-			switch (buffer[0])
+			while (!endThread)
 			{
-				case SIMULATOR_RECORD:
-					car.userInput = true;
-					while (car.verticalSteering == 0f) ;
-					while (!endThread)
-					{
+				if (socket.Receive(buffer) == 0)
+					break;
+				switch (buffer[0])
+				{
+					case RECORD:
+						car.userInput = true;
+						unsetFastForward = true;
 						requireTexture = true;
 						while (requireTexture) ;
 						if (socket.Send(buffer, statusSize, SocketFlags.None) == 0)
-							break;
-						int len = socket.Receive(buffer);
-						if (len == 0 || (len == 1 && buffer[0] == DISCONNECT))
-							break;
-					}
-					break;
-				case SIMULATOR_DRIVE:
-					setupFastForward = true;
-					car.userInput = false;
-					while (!endThread)
-					{
+							endThread = true;
+						break;
+					case DRIVE:
+						car.userInput = false;
+						car.horizontalSteering = ((float)buffer[1]) / 127.5f - 1f;
+						car.verticalSteering = ((float)buffer[2]) / 127.5f - 1f;
+						setFastForward = true;
 						requireTexture = true;
 						while (requireTexture) ;
 						if (socket.Send(buffer, statusSize, SocketFlags.None) == 0)
-							break;
-						int size = socket.Receive(buffer);
-						if (size == 2)
-						{
-							car.horizontalSteering = ((float)buffer[0]) / 127.5f - 1f;
-							car.verticalSteering = ((float)buffer[1]) / 127.5f - 1f;
-						}
-						else
-							break;
-					}
-					break;
+							endThread = true;
+						break;
+					case HEARTBEAT:
+						break;
+					case DISCONNECT:
+						endThread = true;
+						break;
+					case PLAY:
+						setPlay = true;
+						break;
+					case PAUSE:
+						setPause = true;
+						break;
+				}
 			}
+			buffer[0] = DISCONNECT;
+			socket.Send(buffer, 1, SocketFlags.None);
 		}
 		catch (ThreadAbortException)
 		{
+			buffer[0] = DISCONNECT;
+			socket.Send(buffer, 1, SocketFlags.None);
 		}
 		catch (SocketException)
 		{
@@ -162,11 +190,10 @@ public class CommunicationManager : MonoBehaviour {
 		}
 		finally
 		{
-			buffer[0] = DISCONNECT;
-			socket.Send(buffer, 1, SocketFlags.None);
 			socket.Shutdown(SocketShutdown.Both);
 			socket.Close();
 			thread = null;
+			car.userInput = true;
 		}
 	}
 
@@ -241,9 +268,15 @@ public class CommunicationManager : MonoBehaviour {
 				{
 					buffer[index++] = (byte)0;
 					hasReset = false;
+					hasScored = false;
+				}
+				else if (hasScored)
+				{
+					buffer[index++] = (byte)255;
+					hasScored = false;
 				}
 				else
-					buffer[index++] = (byte)(score.currentScore * 127 + 128);
+					buffer[index++] = (byte)(score.currentScore * 126 + 128);
 				statusSize = index;
 				break;
 		}

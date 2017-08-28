@@ -8,10 +8,14 @@ public class TimeManager : MonoBehaviour
 	public float fastSpeed = 5f;
 	public Toggle fastForwardButton;
 	bool fastForwarding;
+	bool fastForwardPossible;
 
 	public static void Pause()
 	{
 		Time.timeScale = 0;
+		QualitySettings.vSyncCount = 1;
+		AudioListener.pause = true;
+		AudioListener.volume = 0.0f;
 	}
 
 	public static void Play()
@@ -21,19 +25,22 @@ public class TimeManager : MonoBehaviour
 			Time.timeScale = instance.fastSpeed;
 			QualitySettings.vSyncCount = 0;
 			AudioListener.pause = true;
+			AudioListener.volume = 0.0f;
 		}
 		else
 		{
 			Time.timeScale = 1;
 			QualitySettings.vSyncCount = 1;
 			AudioListener.pause = false;
+			AudioListener.volume = 1.0f;
 		}
 	}
 
 	public static void SetFastForwardPossible(bool state)
 	{
-		if (instance != null)
+		if (instance != null && state != instance.fastForwardPossible)
 		{
+			instance.fastForwardPossible = state;
 			instance.fastForwardButton.gameObject.SetActive(state);
 			if (!state)
 			{
@@ -52,6 +59,12 @@ public class TimeManager : MonoBehaviour
 		{
 			fastSpeed *= 2;
 			fastForwarding = true;
+			fastForwardPossible = true;
+		}
+		else
+		{
+			fastForwardPossible = false;
+			fastForwarding = false;
 		}
 		fastForwardButton.onValueChanged.AddListener(ToggleFastForward);
 	}

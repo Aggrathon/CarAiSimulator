@@ -10,10 +10,12 @@ public class CarSteering : MonoBehaviour
 	public bool userInput {
 		get { return _userInput; }
 		set {
-			_userInput = value;
-			horizontalSteering = 0f;
-			verticalSteering = 0f;
-			handbrake = 0f;
+			if (_userInput != value)
+			{
+				_userInput = value;
+				horizontalSteering = 0f;
+				verticalSteering = 0f;
+			}
 		}
 	}
 
@@ -22,8 +24,6 @@ public class CarSteering : MonoBehaviour
 	public float horizontalSteering;
 	[NonSerialized]
 	public float verticalSteering;
-	[NonSerialized]
-	public float handbrake;
 
     private void Awake()
     {

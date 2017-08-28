@@ -1,4 +1,4 @@
-from communication import Recorder
+from communication import Driver
 from threading import Thread
 from queue import Queue
 from data import score_buffer, write_data
@@ -7,20 +7,25 @@ from data import score_buffer, write_data
 def record_data(data_queue):
     counter = 0
     buffer = score_buffer()
-    with Recorder() as comm:
+    with Driver() as comm:
         print("Waiting for Data...               ", end='\r')
         try:
-            data = comm.get_status()
-            comm.send_heartbeat()
+            data = comm.record()
+            comm.heartbeat()
             while data is not None and len(data) > 0:
                 buffer.add_item(*data[:-1], score=data[-1])
+                score = 0.0
                 for d in buffer.get_items():
+                    score = d[-1]
                     d[-1] = [d[-1]*0.6+0.4]
                     data_queue.put(d)
                 counter += 1
-                print("Snapshots recieved:",counter, end='\r')
-                data = comm.get_status()
-                comm.send_heartbeat()
+                if score != 0.0:
+                    print("Snapshots recieved:", counter, "  (%.2f) "%score, end='\r')
+                else:
+                    print("Snapshots recieved:", counter, "           ", end='\r')
+                data = comm.record()
+                comm.heartbeat()
         except StopIteration:
             pass
         except KeyboardInterrupt:

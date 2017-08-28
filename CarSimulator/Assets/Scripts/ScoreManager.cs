@@ -12,11 +12,14 @@ public class ScoreManager : MonoBehaviour {
 
 	public float targetSpeed = 100f;
 	public float resetPenalty = 10;
+	public float waypointReward = 5;
 
 
 	void Start () {
 		manager = GetComponent<TrackManager>();
 		manager.onReset += OnReset;
+		manager.track.onGenerated += OnGenerated;
+		manager.onWaypoint += OnWaypoint;
 	}
 	
 
@@ -39,4 +42,13 @@ public class ScoreManager : MonoBehaviour {
 		totalScore -= resetPenalty;
 	}
 	
+	void OnGenerated()
+	{
+		totalScore = 0;
+	}
+
+	void OnWaypoint()
+	{
+		totalScore += waypointReward;
+	}
 }
