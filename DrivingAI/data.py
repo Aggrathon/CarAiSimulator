@@ -54,7 +54,7 @@ def get_shuffle_batch(batch=16, capacity=8000, fixed_score=True):
 
 class score_buffer():
 
-    def __init__(self, length=200, falloff=0.985, min_score_length=5, peak=9):
+    def __init__(self, length=300, falloff=0.99, min_score_length=5, peak=10):
         self.length = length
         self.falloff = falloff
         self.min_score_length = min_score_length

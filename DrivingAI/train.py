@@ -23,17 +23,22 @@ def get_input(driver, session, neta, netb, tensor_img, tensor_vars, tensor_out, 
                 h = np.clip(h + np.random.normal(0, 0.4), -1, 1)
                 v = np.clip(v + np.random.normal(0, 0.4), -1, 1)
             buffer.add_item(x, v, [h, v], score=s)
+        sum = 0
         for i in buffer.get_items():
             array.append(i)
             if i[-1] > 0:
                 array.append(i)
-        return h, v
+            sum += i[-1]
+        return h, v, sum
     driver.play()
-    for _ in range(3):
-        print("Filling the reinforcement buffer...     (A)", end='\r')
-        h, v = fill_buffer(neta.output, h, v)
-        print("Filling the reinforcement buffer...     (B)", end='\r')
-        h, v = fill_buffer(netb.output, h, v)
+    sum = 0
+    for i in range(3):
+        print("Filling the reinforcement buffer...     (A, Average: %.2f)"%(sum/(i*800+0.1)), end='\r')
+        h, v, s = fill_buffer(neta.output, h, v)
+        sum += s
+        print("Filling the reinforcement buffer...     (B, Average: %.2f)"%(sum/(i*800+400)), end='\r')
+        h, v, s = fill_buffer(netb.output, h, v)
+        sum += s
     driver.pause()
     for i in buffer.clear_buffer():
         array.append(i)

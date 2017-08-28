@@ -1302,6 +1302,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effect: {fileID: 2100000, guid: d257f521016298b4cbadd1741b02879d, type: 2}
+  cameraDepth: 2
 --- !u!114 &680253530
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2162,12 +2163,11 @@ MonoBehaviour:
   car: {fileID: 91154554}
   connectButton: {fileID: 1264629776}
   disconnectButton: {fileID: 71635711}
-  connectionTimeout: 20
   cameraView: {fileID: 8400000, guid: 20fc137371cb95348aa78bed0dd71491, type: 2}
   track: {fileID: 1244140417}
   score: {fileID: 1244140421}
   speedometer: {fileID: 150750000}
-  sendInterval: 0.1
+  sendInterval: 0.06
 --- !u!114 &1244140420
 MonoBehaviour:
   m_ObjectHideFlags: 0

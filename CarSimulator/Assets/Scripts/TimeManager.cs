@@ -41,14 +41,14 @@ public class TimeManager : MonoBehaviour
 		if (instance != null && state != instance.fastForwardPossible)
 		{
 			instance.fastForwardPossible = state;
-			instance.fastForwardButton.gameObject.SetActive(state);
-			if (!state)
+			instance.fastForwarding = instance.fastForwarding && state;
+			if (instance.fastForwardButton != null)
 			{
-				instance.fastForwarding = false;
-				if (Time.timeScale > 0)
+				instance.fastForwardButton.gameObject.SetActive(state);
+				if (!state && Time.timeScale > 0)
 					Play();
+				instance.fastForwardButton.isOn = instance.fastForwarding;
 			}
-			instance.fastForwardButton.isOn = instance.fastForwarding;
 		}
 	}
 

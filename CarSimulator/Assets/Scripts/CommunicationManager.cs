@@ -261,7 +261,7 @@ public class CommunicationManager : MonoBehaviour {
 				layer = 1;
 				lastSend = Time.time + sendInterval;
 				index = imageSize * 4;
-				buffer[index++] = (byte)(speedometer.speed * 3 + 100);
+				buffer[index++] = (byte)Mathf.Clamp(speedometer.speed * 4 + 100, 0, 255);
 				buffer[index++] = (byte)(car.horizontalSteering * 127.5f + 127.5f);
 				buffer[index++] = (byte)(car.verticalSteering * 127.5f + 127.5f);
 				if (hasReset)
