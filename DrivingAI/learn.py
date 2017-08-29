@@ -5,12 +5,12 @@ from model import Session, get_network
 from data import get_shuffle_batch
 
 
-def learn(image, variables, example, iterations=50000, summary_interval=100):
+def learn(image, variables, example, score, iterations=50000, summary_interval=100):
     """
         Learn to drive from examples
     """
     try:
-        global_step, network_a, network_b = get_network(image, variables, example)
+        global_step, network_a, network_b = get_network(image, variables, example, score, True)
         with Session(True, True, global_step) as sess:
             last_save = timer()
             step = 1
@@ -43,6 +43,6 @@ def learn(image, variables, example, iterations=50000, summary_interval=100):
 if __name__ == "__main__":
     tf.logging.set_verbosity(tf.logging.INFO)
     if len(sys.argv) > 1:
-        learn(*get_shuffle_batch(16)[:-1], int(sys.argv[1]))
+        learn(*get_shuffle_batch(16, fixed_score=False), int(sys.argv[1]))
     else:
-        learn(*get_shuffle_batch(16)[:-1])
+        learn(*get_shuffle_batch(16, fixed_score=False))

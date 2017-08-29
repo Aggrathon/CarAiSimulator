@@ -37,9 +37,9 @@ class Session():
             self.summary_ops = None
             self.summary_writer = None
     
-    def save_summary(self, global_step):
+    def save_summary(self, global_step, fd=None):
         if self.summary_writer is not None:
-            self.summary_writer.add_summary(self.session.run(self.summary_ops), global_step)
+            self.summary_writer.add_summary(self.session.run(self.summary_ops, feed_dict=fd), global_step)
     
     def save_network(self):
         if self._save:
@@ -57,52 +57,55 @@ class Session():
             self.summary_writer.close()
 
 
-def get_network(image, variables, example=None, weights=1.0, training=True):
+def get_network(image, variables, example=None, score=1.0, training=True):
     """
         Creates the double networks
     """
     global_step = tf.Variable(0, name='global_step')
-    network_a = Network(image, variables, example, weights, training,  global_step=global_step, name="Network_A")
-    network_b = Network(image, variables, example, weights, training, name="Network_B")
+    network_a = Network(image, variables, example, score, training,  global_step=global_step, name="Network_A")
+    network_b = Network(image, variables, example, score, training, name="Network_B")
     return global_step, network_a, network_b
 
 
 class Network():
-    def __init__(self, input_image, input_variables, example_output=None, weights=1.0, training=True, global_step=None, name="Network"):
+    def __init__(self, input_image, input_variables, example_output=None, score=None, training=False, global_step=None, name="Network"):
         self.name = name
         with tf.variable_scope(name):
             prev_layer = input_image
             # Convolutions
-            for i, size in enumerate([32, 64, 128]):
+            for i, size in enumerate([32, 64, 96]):
                 with tf.variable_scope('convolution_%d'%i):
-                    prev_layer = tf.layers.conv2d(prev_layer, size, 5, 1, 'same', activation=tf.nn.relu)
-                    prev_layer = tf.layers.max_pooling2d(prev_layer, 3, 2, 'valid')
-                    prev_layer = tf.nn.local_response_normalization(prev_layer, 4, 1.0, 1e-4, 0.75)
+                    prev_layer = tf.layers.conv2d(prev_layer, size, 7-i*2, 1, 'valid', activation=tf.nn.relu)
+                    if i < 2:
+                        prev_layer = tf.layers.max_pooling2d(prev_layer, 3, 2, 'valid')
+                    tf.layers.batch_normalization(prev_layer, training=training)
             # Combine variables
             prev_layer = tf.contrib.layers.flatten(prev_layer)
             prev_layer = tf.concat([prev_layer, input_variables], 1)
             # Fully connected layers
-            for i, size in enumerate([1024, 256, 64]):
+            for i, size in enumerate([1024, 512]):
                 with tf.variable_scope('fully_connected_%d'%i):
                     prev_layer = tf.layers.dense(prev_layer, size, tf.nn.relu, use_bias=True)
-                    if training:
-                        prev_layer = tf.layers.dropout(prev_layer, 0.3)
-            prev_layer = tf.contrib.layers.flatten(prev_layer)
+                    prev_layer = tf.layers.dropout(prev_layer, 0.3, training=training)
             # Output
-            self.output = tf.layers.dense(prev_layer, 2, activation=tf.nn.tanh, use_bias=True)
-            self.horizontal, self.vertical = tf.split(self.output, [1,1], 1)
+            self.output = tf.layers.dense(prev_layer, 3, use_bias=True)
+            self.horizontal, self.vertical, self.prediction = tf.split(self.output, [1,1,1], 1)
             tf.summary.histogram('Horizontal', self.horizontal)
             tf.summary.histogram('Vertical', self.vertical)
             # Trainers and losses here
-            if example_output is not None:
+            if example_output is not None and score is not None:
                 self.vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=name)
-                if weights is 1.0:
-                    self.loss = tf.losses.mean_squared_error(self.output, example_output)
-                else:
-                    loss_pos = tf.squared_difference(self.output, example_output)*tf.minimum(tf.maximum(0.0, weights), 1.0)
-                    loss_neg = (1.0-tf.abs(self.output-example_output))*tf.minimum(tf.negative(tf.minimum(0.0, weights))*0.1, 0.05)
-                    self.loss = tf.losses.compute_weighted_loss((loss_pos + loss_neg), reduction=tf.losses.Reduction.MEAN)
-                adam = tf.train.AdamOptimizer(1e-5, 0.85)
-                self.trainer = adam.minimize(self.loss, global_step, self.vars)
-                tf.summary.scalar('Loss', self.loss)
+                self.update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope=name)
+                steer, _ = tf.split(self.output, [2,1], 1)
+                loss_pos = tf.squared_difference(steer, example_output)*tf.minimum(tf.maximum(0.0, score), 1.0)
+                loss_neg = (1.0-tf.abs(steer-example_output))*tf.minimum(tf.negative(tf.minimum(0.0, score))*0.1, 0.05)
+                loss_pred = tf.squared_difference(self.prediction, score)*0.2
+                self.loss = tf.losses.compute_weighted_loss((loss_pos + loss_neg + loss_pred), reduction=tf.losses.Reduction.MEAN)
+                with tf.control_dependencies(self.update_ops):
+                    self.trainer = tf.train.AdamOptimizer(1e-5, 0.85).minimize(self.loss, global_step, self.vars)
+                with tf.name_scope('Loss'):
+                    tf.summary.scalar('Sum', self.loss)
+                    tf.summary.scalar('Positive', tf.reduce_mean(loss_pos))
+                    tf.summary.scalar('Negative', tf.reduce_mean(loss_neg))
+                    tf.summary.scalar('Prediction', tf.reduce_mean(loss_pred))
 

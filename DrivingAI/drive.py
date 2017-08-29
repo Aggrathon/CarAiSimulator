@@ -22,8 +22,8 @@ def drive():
                 h = 0
                 v = 1
                 while True:
-                    h, v = session.run(neta.output, feed_dict=inout(h, v))[0]
-                    h, v = session.run(netb.output, feed_dict=inout(h, v))[0]
+                    h, v = sess.session.run(neta.output, feed_dict=inout(h, v))[0]
+                    h, v = sess.session.run(netb.output, feed_dict=inout(h, v))[0]
             except (KeyboardInterrupt, StopIteration):
                 pass
 

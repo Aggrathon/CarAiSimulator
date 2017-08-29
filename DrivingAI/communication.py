@@ -79,6 +79,8 @@ class Driver(Communicator):
         self.send(HEARTBEAT)
 
     def drive(self, h, v):
+        h = max(min(1, h), -1)
+        v = max(min(1, v), -1)
         data = bytes([DRIVE, int((h+1)*127.5), int((v+1)*127.5)])
         self.send(data)
         return self._get_status()
