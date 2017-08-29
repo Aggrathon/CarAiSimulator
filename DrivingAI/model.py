@@ -99,10 +99,9 @@ class Network():
                 if weights is 1.0:
                     self.loss = tf.losses.mean_squared_error(self.output, example_output)
                 else:
-                    loss_pos = tf.squared_difference(self.output, example_output)*tf.maximum(weights, 0)
-                    loss_neg = (1.0-tf.abs(self.output-example_output))*tf.negative(tf.minimum(weights, 0))
-                    w = tf.minimum(tf.maximum(0, weights), 1) + tf.minimum(tf.negative(tf.minimum(0, weights)), 0.05)
-                    self.loss = tf.losses.compute_weighted_loss(tf.reduce_mean(loss_pos + loss_neg), w, reduction=tf.losses.Reduction.MEAN)
+                    loss_pos = tf.squared_difference(self.output, example_output)*tf.minimum(tf.maximum(0.0, weights), 1.0)
+                    loss_neg = (1.0-tf.abs(self.output-example_output))*tf.minimum(tf.negative(tf.minimum(0.0, weights))*0.1, 0.05)
+                    self.loss = tf.losses.compute_weighted_loss((loss_pos + loss_neg), reduction=tf.losses.Reduction.MEAN)
                 adam = tf.train.AdamOptimizer(1e-5, 0.85)
                 self.trainer = adam.minimize(self.loss, global_step, self.vars)
                 tf.summary.scalar('Loss', self.loss)

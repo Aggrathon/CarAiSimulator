@@ -71,6 +71,7 @@ public class CommunicationManager : MonoBehaviour {
 
 	private void OnDisable()
 	{
+		endThread = true;
 		track.onReset -= OnReset;
 		track.onWaypoint -= OnScore;
 		car.userInput = true;
@@ -79,10 +80,7 @@ public class CommunicationManager : MonoBehaviour {
 		if (disconnectButton)
 			disconnectButton.SetActive(false);
 		TimeManager.SetFastForwardPossible(false);
-		if (thread != null)
-		{
-			endThread = true;
-		}
+		TimeManager.Play();
 	}
 
 	private void OnReset()
@@ -107,6 +105,11 @@ public class CommunicationManager : MonoBehaviour {
 		if (requireTexture)
 		{
 			FillStatusBuffer();
+			if (TimeManager.IsFastForwarding)
+			{
+				FillStatusBuffer();
+				FillStatusBuffer();
+			}
 		}
 		if (setFastForward)
 		{
@@ -173,13 +176,9 @@ public class CommunicationManager : MonoBehaviour {
 						break;
 				}
 			}
-			buffer[0] = DISCONNECT;
-			socket.Send(buffer, 1, SocketFlags.None);
 		}
 		catch (ThreadAbortException)
 		{
-			buffer[0] = DISCONNECT;
-			socket.Send(buffer, 1, SocketFlags.None);
 		}
 		catch (SocketException)
 		{
@@ -254,12 +253,16 @@ public class CommunicationManager : MonoBehaviour {
 				layer = 0;
 				requireTexture = false;
 				break;
+			case 5:
+				return;
 			default:
+				lastSend = Time.time + sendInterval;
+				if (car.userInput)
+					lastSend += sendInterval;
 				RenderTexture.active = cameraView;
 				texture.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0);
 				texture.Apply();
 				layer = 1;
-				lastSend = Time.time + sendInterval;
 				index = imageSize * 4;
 				buffer[index++] = (byte)Mathf.Clamp(speedometer.speed * 4 + 100, 0, 255);
 				buffer[index++] = (byte)(car.horizontalSteering * 127.5f + 127.5f);

@@ -54,30 +54,29 @@ def get_shuffle_batch(batch=16, capacity=8000, fixed_score=True):
 
 class score_buffer():
 
-    def __init__(self, length=300, falloff=0.99, min_score_length=5, peak=10):
+    def __init__(self, length=400, falloff=0.992, peak=40):
         self.length = length
         self.falloff = falloff
-        self.min_score_length = min_score_length
         self.peak = peak
         self.buffer = deque()
         self.to_score = 0
         self.sum = 0
         self.weights = []
         for i in range(length):
-            self.weights.append(falloff**(i-self.peak if i > 0 else 3*self.peak-3*i))
+            self.weights.append(falloff**(i-self.peak if i > 0 else 2*self.peak-2*i))
             self.sum = self.sum + self.weights[i]
-        self.scale = 0.66/length
+        self.scale = 0.2/length
 
     def add_item(self, *values, score):
         if score < -1:
             # The car has been reset
-            rem = min(self.to_score, self.min_score_length)
+            rem = min(self.to_score, self.peak)
             for _ in range(rem):
                 self.buffer.popleft()
             for i, ls in enumerate(self.buffer):
                 if i > self.to_score - rem:
                     break
-                ls[-2] = ls[-2] - self.weights[i+rem]
+                ls[-2] = ls[-2] - self.weights[i//3]*0.5
             self.to_score = 0
             item = list((*values, 0, False))
         elif score > 1:
@@ -90,16 +89,16 @@ class score_buffer():
         else:
             danger = score < 0
             if not danger:
-                score = score -1
+                score = score*0.5 -0.5
             item = list((*values, 0, danger))
             for i, ls in enumerate(self.buffer):
                 if i > self.to_score:
                     break
                 if ls[-1] and not danger:
-                    ls[-2] = ls[-2] + self.weights[i] * 0.1
+                    ls[-2] = ls[-2] + self.weights[i] * 0.2
                     ls[-1] = False
                 elif danger and not ls[-1]:
-                    ls[-2] = ls[-2] - self.weights[i] * 0.1
+                    ls[-2] = ls[-2] - self.weights[i] * 0.2
                 ls[-2] = ls[-2] + self.weights[i] * score * self.scale
         self.buffer.appendleft(item)
         self.to_score = min(self.to_score + 1, self.length-1)
@@ -111,7 +110,7 @@ class score_buffer():
             yield item
 
     def clear_buffer(self):
-        self.to_score = min(self.to_score, self.min_score_length)
+        self.to_score = min(self.to_score, self.peak)
         for i in self.get_items():
             yield i
         self.buffer.clear()

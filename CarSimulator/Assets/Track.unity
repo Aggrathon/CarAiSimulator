@@ -23,7 +23,7 @@ RenderSettings:
   m_AmbientSkyColor: {r: 0.2, g: 0.2, b: 0.2, a: 0}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
-  m_AmbientIntensity: 1
+  m_AmbientIntensity: 1.2
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 2100000, guid: 234859a8d5a5eb742a33c185ef2cef76, type: 2}
@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
-  m_Sun: {fileID: 0}
+  m_Sun: {fileID: 1847707118}
   m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!157 &3
 LightmapSettings:
@@ -1271,7 +1271,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.5
-  far clip plane: 600
+  far clip plane: 550
   field of view: 70
   orthographic: 0
   orthographic size: 5
@@ -1319,7 +1319,7 @@ MonoBehaviour:
   - {r: 1, g: 0.45882356, b: 0, a: 0.8627451}
   - {r: 0.6836686, g: 0.36559254, b: 0.7205882, a: 0.627451}
   - {r: 0.6836686, g: 0.36559254, b: 0.7205882, a: 0.627451}
-  - {r: 0.6836686, g: 0.36559254, b: 0.7205882, a: 0.2509804}
+  - {r: 0.6836686, g: 0.36559254, b: 0.7205882, a: 0.39}
   mat: {fileID: 2100000, guid: 7cff56f7ac2d2604eabff04a0d31542d, type: 2}
 --- !u!1 &768481512
 GameObject:
@@ -2167,7 +2167,7 @@ MonoBehaviour:
   track: {fileID: 1244140417}
   score: {fileID: 1244140421}
   speedometer: {fileID: 150750000}
-  sendInterval: 0.06
+  sendInterval: 0.05
 --- !u!114 &1244140420
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3457,7 +3457,7 @@ ParticleSystem:
   moveWithTransform: 0
   moveWithCustomTransform: {fileID: 0}
   scalingMode: 1
-  randomSeed: -1774554212
+  randomSeed: -1978540689
   InitialModule:
     serializedVersion: 3
     enabled: 1

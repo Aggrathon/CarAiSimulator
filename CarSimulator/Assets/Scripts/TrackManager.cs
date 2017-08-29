@@ -56,9 +56,9 @@ public class TrackManager : MonoBehaviour {
 	private void OnTrackGenerated()
 	{
 		waitForGenerationScreen.SetActive(false);
-		checkpoint = -1;
-		waypointPosition = track.road[track.road.Count-1];
-		waypointNext = track.road[0];
+		checkpoint = 0;
+		waypointPosition = track.road[0];
+		waypointNext = track.road[1];
 		ResetCar();
 		TimeManager.Play();
 	}

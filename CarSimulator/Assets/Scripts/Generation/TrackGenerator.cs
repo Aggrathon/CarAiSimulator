@@ -191,4 +191,9 @@ public class TrackGenerator : MonoBehaviour {
 		int x = (int)((pos.z - terrain.transform.position.z) / size.z * alphas.GetLength(1));
 		return alphas[x, y, ROAD_TEXTURE_INDEX] > 0.5f || alphas[x, y, PAINT_TEXTURE_INDEX] > 0.5f;
 	}
+
+	private void OnDestroy()
+	{
+		Utils.ClearMemory();
+	}
 }

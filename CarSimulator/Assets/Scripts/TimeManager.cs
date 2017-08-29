@@ -10,6 +10,8 @@ public class TimeManager : MonoBehaviour
 	bool fastForwarding;
 	bool fastForwardPossible;
 
+	public static bool IsFastForwarding { get { return instance != null && instance.fastForwarding; } }
+
 	public static void Pause()
 	{
 		Time.timeScale = 0;

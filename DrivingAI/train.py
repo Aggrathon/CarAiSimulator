@@ -13,30 +13,32 @@ def get_input(driver, session, neta, netb, tensor_img, tensor_vars, tensor_out, 
         array = []
     h = 0
     v = 1
+    per_network_size = 500
     def fill_buffer(output, h,v):
-        while buffer.get_num_scored() < 400:
+        while buffer.get_num_scored() < per_network_size:
             x, v, y, s = driver.drive(h, v)
             y = session.run(output, feed_dict={ tensor_examples: 0, tensor_img: [x], tensor_vars: [v] })
             h = y[0][0]
             v = y[0][1]
-            if np.random.uniform() < 0.07:
-                h = np.clip(h + np.random.normal(0, 0.4), -1, 1)
-                v = np.clip(v + np.random.normal(0, 0.4), -1, 1)
+            if np.random.uniform() < 0.05:
+                h = np.clip(h + np.random.normal(0, 0.1) + np.random.normal(0, 0.1), -1, 1)
+                v = np.clip(v + np.random.normal(0, 0.4) + np.random.normal(0, 0.4), -1, 1)
             buffer.add_item(x, v, [h, v], score=s)
         sum = 0
         for i in buffer.get_items():
             array.append(i)
             if i[-1] > 0:
                 array.append(i)
+                array.append(i)
             sum += i[-1]
         return h, v, sum
     driver.play()
     sum = 0
-    for i in range(3):
-        print("Filling the reinforcement buffer...     (A, Average: %.2f)"%(sum/(i*800+0.1)), end='\r')
+    for i in range(2):
+        print("Filling the reinforcement buffer...     (A, Average: %.2f)"%(sum/(i*per_network_size*2+0.1)), end='\r')
         h, v, s = fill_buffer(neta.output, h, v)
         sum += s
-        print("Filling the reinforcement buffer...     (B, Average: %.2f)"%(sum/(i*800+400)), end='\r')
+        print("Filling the reinforcement buffer...     (B, Average: %.2f)"%(sum/(i*per_network_size*2+per_network_size)), end='\r')
         h, v, s = fill_buffer(netb.output, h, v)
         sum += s
     driver.pause()
@@ -83,10 +85,10 @@ def create_placeholders():
 
 def train(iterations=80000, summary_interval=100, batch=32):
     tf.logging.set_verbosity(tf.logging.INFO)
-    with Driver() as driver:
-        placeholders = create_placeholders()
-        global_step, network_a, network_b = get_network(*placeholders[-4:], True)
-        with Session(True, True, global_step) as sess:
+    placeholders = create_placeholders()
+    global_step, network_a, network_b = get_network(*placeholders[-4:], True)
+    with Session(True, True, global_step) as sess:
+        with Driver() as driver:
             try:
                 last_save = timer()
                 array = []
@@ -97,9 +99,9 @@ def train(iterations=80000, summary_interval=100, batch=32):
                     if len(array) < batch*4:
                         get_input(driver, sess.session, network_a, network_b, *placeholders[:5], buffer, array)
                     pre = timer()
-                    fd = get_batch_feed(array, *placeholders[:5], batch, batch*3//8)
+                    fd = get_batch_feed(array, *placeholders[:5], batch, batch//2)
                     _, aloss, step = sess.session.run([network_a.trainer, network_a.loss, global_step], feed_dict=fd)
-                    fd = get_batch_feed(array, *placeholders[:5], batch, batch*3//8)
+                    fd = get_batch_feed(array, *placeholders[:5], batch, batch//2)
                     _, bloss = sess.session.run([network_b.trainer, network_b.loss], feed_dict=fd)
                     if step%summary_interval == 0:
                         print()
