@@ -74,13 +74,16 @@ public class CommunicationManager : MonoBehaviour {
 		endThread = true;
 		track.onReset -= OnReset;
 		track.onWaypoint -= OnScore;
-		car.userInput = true;
 		if (connectButton)
 			connectButton.SetActive(true);
 		if (disconnectButton)
 			disconnectButton.SetActive(false);
 		TimeManager.SetFastForwardPossible(false);
-		TimeManager.Play();
+		if (car.userInput)
+		{
+			car.userInput = true;
+			TimeManager.Play();
+		}
 	}
 
 	private void OnReset()
