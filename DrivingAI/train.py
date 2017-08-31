@@ -37,6 +37,14 @@ def get_input(driver, session, neta, netb, tensor_placeholders, buffer=None, arr
     h = 0
     v = 1
     per_network_size = 500
+    def add_item(i):
+        array.append(i)
+        if i[-1] > 0:
+            array.append(i)
+            array.append(i)
+            if i[-1] > i[-2][-1]+0.3:
+                array.append(i)
+                array.append(i)
     def fill_buffer(output, h,v):
         while buffer.get_num_scored() < per_network_size:
             x, v, y, s = driver.drive(h, v)
@@ -48,16 +56,14 @@ def get_input(driver, session, neta, netb, tensor_placeholders, buffer=None, arr
             })
             h = y[0][0]
             v = y[0][1]
-            if np.random.uniform() < 0.05:
-                h = np.clip(h + np.random.normal(0, 0.1) + np.random.normal(0, 0.1), -1, 1)
-                v = np.clip(v + np.random.normal(0, 0.4) + np.random.normal(0, 0.4), -1, 1)
-            buffer.add_item(x, v, [h, v], score=s)
+            p = y[0][2]
+            if np.random.uniform() < 0.1:
+                h = np.clip(h + np.random.normal(0, 0.3) + np.random.normal(0, 0.2), -1, 1)
+                v = np.clip(v + np.random.normal(0, 0.5) + np.random.normal(0, 0.5), -1, 1)
+            buffer.add_item(x, v, [h, v, p], score=s)
         sum = 0
         for i in buffer.get_items():
-            array.append(i)
-            if i[-1] > 0:
-                array.append(i)
-                array.append(i)
+            add_item(i)
             sum += i[-1]
         return h, v, sum
     driver.play()
@@ -71,8 +77,7 @@ def get_input(driver, session, neta, netb, tensor_placeholders, buffer=None, arr
         sum += s
     driver.pause()
     for i in buffer.clear_buffer():
-        array.append(i)
-        array.append(i)
+        add_item(i)
     np.random.shuffle(array)
     return array
 
@@ -86,7 +91,7 @@ def get_batch_feed(array, tensor_placeholders, batch=32, example_count=12):
         x_, v_, y_, s_ = array.pop()
         x.append(x_)
         v.append(v_)
-        y.append(y_)
+        y.append(y_[:2])
         s.append(s_)
     return {
         tensor_placeholders[0]: x,
@@ -111,7 +116,7 @@ def train(iterations=80000, summary_interval=100, batch=32):
                 step = 0
                 time = 1
                 for _ in range(iterations):
-                    if len(array) < batch*4:
+                    if len(array) < batch*10:
                         get_input(driver, sess.session, network_a, network_b, placeholders, buffer, array)
                     pre = timer()
                     _, aloss, step = sess.session.run([network_a.trainer, network_a.loss, global_step], feed_dict=get_batch_feed(array, placeholders, batch, batch//2))

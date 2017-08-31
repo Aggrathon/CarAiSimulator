@@ -98,11 +98,11 @@ class Network():
                 self.update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope=name)
                 steer, _ = tf.split(self.output, [2,1], 1)
                 loss_pos = tf.squared_difference(steer, example_output)*tf.minimum(tf.maximum(0.0, score), 1.0)
-                loss_neg = (1.0-tf.abs(steer-example_output))*tf.minimum(tf.negative(tf.minimum(0.0, score))*0.1, 0.05)
-                loss_pred = tf.squared_difference(self.prediction, score)*0.2
+                loss_neg = (1.0-tf.abs(steer-example_output))*tf.minimum(tf.negative(tf.minimum(0.0, score))*0.1, 0.1)
+                loss_pred = tf.squared_difference(self.prediction*0.1, score*0.1)
                 self.loss = tf.losses.compute_weighted_loss((loss_pos + loss_neg + loss_pred), reduction=tf.losses.Reduction.MEAN)
                 with tf.control_dependencies(self.update_ops):
-                    self.trainer = tf.train.AdamOptimizer(1e-5, 0.85).minimize(self.loss, global_step, self.vars)
+                    self.trainer = tf.train.AdamOptimizer(1e-5).minimize(self.loss, global_step, self.vars)
                 with tf.name_scope('Loss'):
                     tf.summary.scalar('Sum', self.loss)
                     tf.summary.scalar('Positive', tf.reduce_mean(loss_pos))

@@ -5,7 +5,7 @@ from model import Session, get_network
 from data import get_shuffle_batch
 
 
-def learn(image, variables, example, score, iterations=50000, summary_interval=100):
+def learn(image, variables, example, score, iterations=10000, summary_interval=100):
     """
         Learn to drive from examples
     """
