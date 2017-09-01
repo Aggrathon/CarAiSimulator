@@ -69,13 +69,14 @@ def get_input(driver, session, neta, netb, tensor_placeholders, buffer=None, arr
     driver.play()
     sum = 0
     for i in range(2):
-        print("Filling the reinforcement buffer...     (A, Average: %.2f)"%(sum/(i*per_network_size*2+0.1)), end='\r')
+        print("Filling the reinforcement buffer...     (A, Average: %.2f)  "%(sum/(i*per_network_size*2+0.1)), end='\r')
         h, v, s = fill_buffer(neta.output, h, v)
         sum += s
-        print("Filling the reinforcement buffer...     (B, Average: %.2f)"%(sum/(i*per_network_size*2+per_network_size)), end='\r')
+        print("Filling the reinforcement buffer...     (B, Average: %.2f)  "%(sum/(i*per_network_size*2+per_network_size)), end='\r')
         h, v, s = fill_buffer(netb.output, h, v)
         sum += s
     driver.pause()
+    print("Filled the experience replay buffer (Average score: %.2f)          "%(sum/(2*per_network_size*2)))
     for i in buffer.clear_buffer():
         add_item(i)
     np.random.shuffle(array)
@@ -121,12 +122,12 @@ def train(iterations=80000, summary_interval=100, batch=32):
                     pre = timer()
                     _, aloss, step = sess.session.run([network_a.trainer, network_a.loss, global_step], feed_dict=get_batch_feed(array, placeholders, batch, batch//2))
                     _, bloss = sess.session.run([network_b.trainer, network_b.loss], feed_dict=get_batch_feed(array, placeholders, batch, batch//2))
+                    time = 0.9*time + 0.11 *(timer()-pre)
+                    if step%10 == 0:
+                        print("Training step: %i, Loss A: %.3f, Loss B: %.3f (%.2f s)  "%(step, aloss, bloss, time), end='\r')
                     if step%summary_interval == 0:
                         sess.save_summary(step, get_batch_feed(array, placeholders, batch, batch//2))
                         print()
-                    time = 0.9*time + 0.1 *(timer()-pre)
-                    if step%10 == 0:
-                        print("Training step: %i, Loss A: %.3f, Loss B: %.3f (%.2f s)  "%(step, aloss, bloss, time), end='\r')
                     if timer() - last_save > 1800:
                         sess.save_network()
                         last_save = timer()
