@@ -14,21 +14,21 @@ class Session():
         os.makedirs(self.log_directory, exist_ok=True)
         os.makedirs(self.network_directory, exist_ok=True)
         self._save = save
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(tf.trainable_variables())
         self.global_step = global_step
         self.session = tf.Session()
+        self.session.run(tf.global_variables_initializer())
+        self.session.run(tf.local_variables_initializer())
         self.coord = tf.train.Coordinator()
         tf.train.start_queue_runners(self.session, self.coord)
         try:
             ckpt = tf.train.get_checkpoint_state(self.network_directory)
             if ckpt is None:
-                self.session.run(tf.global_variables_initializer())
                 print("\nCreated a new network\n")
             else:
                 self.saver.restore(self.session, ckpt.model_checkpoint_path)
                 print("\nLoaded an existing network\n")
         except Exception as e:
-            self.session.run(tf.global_variables_initializer())
             print("\nCreated a new network (%s)\n"%repr(e))
         if summary:
             self.summary_ops = tf.summary.merge_all()
@@ -43,7 +43,7 @@ class Session():
     
     def save_network(self):
         if self._save:
-            self.saver.save(self.session, self.model_file_name, self.global_step)
+            self.saver.save(self.session, self.model_file_name, self.global_step, write_meta_graph=False)
 
     def __enter__(self):
         return self
